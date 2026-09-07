@@ -13,8 +13,9 @@ Streaming: executors publish `TribunalEvent` values with `ctx.yield_output`;
 the same `emit(event, data)` callback contract the FastAPI SSE route and the
 React UI already speak, so nothing downstream changes.
 
-Verdict assembly is imported from `tribunal.workflow` (`build_verdict`,
-`claim_summary`, `LABELS`) so both orchestrators produce byte-identical verdicts.
+Verdict assembly and the evidence step are imported from `tribunal.workflow`
+(`build_verdict`, `gather_evidence`, `LABELS`) so both orchestrators produce
+byte-identical verdicts from identical evidence.
 """
 import asyncio
 import base64
@@ -27,10 +28,11 @@ from typing import Never
 
 from agent_framework import Executor, WorkflowBuilder, WorkflowContext, handler
 
-from . import prompts, search_tools, telemetry
+from . import prompts, telemetry
 from .foundry import MODEL, image_part, parse_json, run_agent, split_opinion, text_part
 from .telemetry import agent_span, span
-from .workflow import LABELS, REPO, build_verdict, claim_summary
+from .workflow import (LABELS, REPO, build_verdict, evidence_event, gather_evidence,
+                       photo_block, precedent_block)
 
 sys.path.append(os.path.join(REPO, "challenge-2", "agents"))
 from ocr_agent import extract_text_with_ocr  # noqa: E402  (Challenge 2, Mistral Document AI)
@@ -62,11 +64,17 @@ class OcrText:
 
 @dataclass
 class ClaimRecord:
-    """The structured claim, carried inside Evidence and Opinion."""
+    """The structured claim, carried inside Evidence and Opinion.
+
+    `evidence` is the full retrieval bundle from `workflow.gather_evidence`
+    (prior claims, policy chunks, adjuster precedents, prior-photo matches) so the
+    fan-in Arbiter can cite precedents and photo matches without a second lookup.
+    """
 
     claim_id: str
     claim: dict
     photo_path: str | None = None
+    evidence: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -102,6 +110,16 @@ class TribunalEvent:
 
     event: str
     data: dict
+
+
+def _split(raw: str) -> tuple[str, dict]:
+    """`split_opinion`, with a fallback for the run where the model emits a bare `===`
+    (or no marker at all) instead of `===JSON===`: recover the JSON object from the prose."""
+    prose, data = split_opinion(raw)
+    if not data and (recovered := parse_json(prose)):
+        data = recovered
+        prose = prose[:prose.find("{")].rstrip().rstrip("= \n")
+    return prose, data
 
 
 def _data_url(path: str) -> str:
@@ -160,16 +178,10 @@ class StructureExecutor(Executor):
         await _done(ctx, "structure", t0, data=claim)
         await ctx.yield_output(TribunalEvent("claim", claim))
 
-        summary = claim_summary(claim)
-        prior, policy_chunks = await asyncio.gather(
-            asyncio.to_thread(search_tools.search_prior_claims, summary),
-            asyncio.to_thread(search_tools.search_policies, claim.get("policy_number") or "", summary),
-        )
-        await ctx.yield_output(TribunalEvent("evidence", {
-            "prior_claims": prior,
-            "policy_chunks": [{"title": c.get("title"), "score": c.get("score")} for c in policy_chunks]}))
-        await ctx.send_message(
-            Evidence(ClaimRecord(msg.claim_id, claim, msg.photo_path), prior, policy_chunks))
+        ev = await gather_evidence(claim, msg.photo_path, msg.claim_id)
+        await ctx.yield_output(TribunalEvent("evidence", evidence_event(ev)))
+        await ctx.send_message(Evidence(ClaimRecord(msg.claim_id, claim, msg.photo_path, ev),
+                                        ev["prior_claims"], ev["policy_chunks"]))
 
 
 class _MemberExecutor(Executor):
@@ -184,7 +196,7 @@ class _MemberExecutor(Executor):
             with agent_span(self.agent, claim.claim_id, MODEL):
                 raw = await run_agent(f"Tribunal{self.agent.title()}Agent", instructions, parts,
                                       on_token=_token(ctx, self.agent))
-            prose, data = split_opinion(raw)
+            prose, data = _split(raw)
             await _done(ctx, self.agent, t0, prose=prose, data=data)
         except Exception as e:  # one bad member must not sink the tribunal
             prose, data = "", {"error": str(e)[:300]}
@@ -214,7 +226,8 @@ class FraudExecutor(_MemberExecutor):
         photo = [image_part(_data_url(ev.claim.photo_path))] if ev.claim.photo_path else []
         parts = [text_part(
             f"CLAIM:\n{json.dumps(ev.claim.claim, indent=1)}\n\n"
-            f"PRIOR CLAIMS (vector search, top 5):\n{json.dumps(ev.prior_claims, indent=1)}")] + photo
+            f"PRIOR CLAIMS (vector search, top 5):\n{json.dumps(ev.prior_claims, indent=1)}"
+            + photo_block(ev.claim.evidence) + precedent_block(ev.claim.evidence))] + photo
         await self._opinion(ev.claim, parts, prompts.FRAUD, ctx)
 
 
@@ -227,7 +240,8 @@ class PolicyExecutor(_MemberExecutor):
     async def run(self, ev: Evidence, ctx: WorkflowContext[Opinion, TribunalEvent]) -> None:
         parts = [text_part(
             f"CLAIM:\n{json.dumps(ev.claim.claim, indent=1)}\n\nPOLICY DOCUMENT SECTIONS:\n" +
-            "\n\n".join(f"[{c.get('title')}]\n{c.get('content')}" for c in ev.policy_chunks))]
+            "\n\n".join(f"[{c.get('title')}]\n{c.get('content')}" for c in ev.policy_chunks)
+            + precedent_block(ev.claim.evidence))]
         await self._opinion(ev.claim, parts, prompts.POLICY, ctx)
 
 
@@ -242,17 +256,27 @@ class ArbiterExecutor(Executor):
 
         t0 = time.time()
         await _start(ctx, "arbiter")
-        try:
-            with agent_span("arbiter", claim.claim_id, MODEL):
-                raw = await run_agent("TribunalArbiterAgent", prompts.ARBITER, [text_part(
-                    f"CLAIM:\n{json.dumps(claim.claim, indent=1)}\n\nADJUSTER:\n{json.dumps(adjuster, indent=1)}\n\n"
-                    f"FRAUD INVESTIGATOR:\n{json.dumps(fraud, indent=1)}\n\n"
-                    f"POLICY ANALYST:\n{json.dumps(policy, indent=1)}")], on_token=_token(ctx, "arbiter"))
-            prose, arbiter = split_opinion(raw)
-            await _done(ctx, "arbiter", t0, prose=prose, data=arbiter)
-        except Exception as e:
-            arbiter = {"error": str(e)[:300]}
-            await ctx.yield_output(TribunalEvent("error", {"agent": "arbiter", "message": str(e)[:300]}))
+        brief = text_part(
+            f"CLAIM:\n{json.dumps(claim.claim, indent=1)}\n\nADJUSTER:\n{json.dumps(adjuster, indent=1)}\n\n"
+            f"FRAUD INVESTIGATOR:\n{json.dumps(fraud, indent=1)}\n\n"
+            f"POLICY ANALYST:\n{json.dumps(policy, indent=1)}"
+            + precedent_block(claim.evidence) + photo_block(claim.evidence))
+        arbiter, last_err = None, None
+        # The Arbiter is the hero card: a single upstream blip would collapse the verdict to
+        # "arbiter output unparseable" with no clauses, so retry once before giving up.
+        for attempt in (1, 2):
+            try:
+                with agent_span("arbiter", claim.claim_id, MODEL):
+                    raw = await run_agent("TribunalArbiterAgent", prompts.ARBITER, [brief],
+                                          on_token=_token(ctx, "arbiter") if attempt == 1 else None)
+                prose, arbiter = _split(raw)
+                await _done(ctx, "arbiter", t0, prose=prose, data=arbiter)
+                break
+            except Exception as e:
+                last_err = e
+        if arbiter is None:
+            arbiter = {"error": str(last_err)[:300]}
+            await ctx.yield_output(TribunalEvent("error", {"agent": "arbiter", "message": str(last_err)[:300]}))
 
         verdict = build_verdict(claim.claim_id, claim.claim, adjuster, fraud, policy, arbiter)
         await ctx.yield_output(VerdictMsg(claim.claim_id, verdict))
