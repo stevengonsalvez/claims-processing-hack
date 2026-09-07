@@ -158,7 +158,7 @@ function Verdict({ v, decision, override, setOverride, record }: any) {
     <div className={`verdict ${v.decision}`}>
       <div className="vhead"><span className="vdec">{v.decision}</span><span className="vconf">confidence {Number(v.confidence).toFixed(2)}</span></div>
       <p className="rationale">{v.rationale}</p>
-      {v.referral_reason && <p className="refer">Referral: {v.referral_reason}</p>}
+      {v.referral_reason && <p className="referral">Referral: {v.referral_reason}</p>}
       {v.disagreements?.length > 0 && <ul className="dis">{v.disagreements.map((d: any, i: number) => <li key={i}><b>{d.between}</b>: {d.resolution}</li>)}</ul>}
       <div className="money">
         <div><span>claimed</span>{usd(p.claimed)}</div><div><span>covered</span>{usd(p.covered)}</div>

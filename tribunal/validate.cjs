@@ -40,7 +40,7 @@ const log = (m) => { const l = `--- ${new Date().toISOString().slice(11, 19)} ${
     hot_prior_claims: [...document.querySelectorAll('.panel .ev li.hot')].map(e => e.textContent),
     citations: [...document.querySelectorAll('.cite li')].map(e => e.textContent),
     disagreements: [...document.querySelectorAll('.dis li')].map(e => e.textContent),
-    referral: document.querySelector('.refer')?.textContent,
+    referral: document.querySelector('.referral')?.textContent,
     letter_words: (document.querySelector('.verdict pre')?.textContent || '').split(/\s+/).length,
     agents: [...document.querySelectorAll('.agent')].map(a => ({ name: a.querySelector('.name')?.textContent, status: a.className.split(' ')[1], badge: a.querySelector('.badge')?.textContent, s: a.querySelector('.ms')?.textContent })),
   }));
