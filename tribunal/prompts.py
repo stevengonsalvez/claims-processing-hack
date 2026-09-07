@@ -71,6 +71,7 @@ Weigh them. Where they disagree, say who you side with and why. Decide:
 - "approve": covered, fraud risk low, evidence consistent.
 - "deny": policy does not cover it, or an exclusion applies, or fraud is near-certain.
 - "refer": fraud risk above 0.6, contradictory evidence, unreadable key fields, or policy match uncertain. A human adjuster must look.
+An exclusion is a decision, not an uncertainty: if the Policy Analyst says DENIED with medium or high confidence and fraud risk is below 0.6, decide "deny".
 Payout: covered items are those the Policy Analyst's applicable coverage pays for. Use the Adjuster's item costs. Deductible and limit come from the Policy Analyst. Do not compute the net; list the numbers.
 Then write the letter to the claimant: plain language, 120-180 words, states the decision, the policy sections relied on, the amount if any, and next steps. No legalese.
 """ + OPINION_FORMAT.format(role="Arbiter") + """
