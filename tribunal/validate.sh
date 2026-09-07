@@ -1,24 +1,26 @@
 #!/bin/bash
 # Scripted browser walkthrough of one demo claim via expect-cli (Playwright, headless).
-# Artifacts: logs/expect-<claim>/{run.log,verdict.json,*.png}
-#   tribunal/validate.sh crash2 [http://localhost:5802]
+# Every expect call is bounded with `timeout`: a combined click+wait step hangs the daemon.
+# Artifacts: logs/expect-<claim>/{run.log,verdict.json,*.png,*.webm}
+#   API_PORT=8423 tribunal/validate.sh crash2 [http://localhost:5802]
 set -uo pipefail
 cd "$(dirname "$0")/.."
 C=${1:-crash2}; URL=${2:-http://localhost:5802}; OUT=logs/expect-$C; mkdir -p "$OUT"; LOG=$OUT/run.log; : > "$LOG"
 step() { echo "--- $(date +%T) $1" | tee -a "$LOG"; }
-pw() { expect-cli playwright "$1" --description "$2" 2>&1 | tee -a "$LOG"; }
-shot() { p=$(expect-cli screenshot ${2:-} 2>&1 | tee -a "$LOG" | grep -oE '/[^ "]+\.png' | head -1); [ -n "$p" ] && cp -f "$p" "$OUT/$1.png"; }
+pw() { timeout "${3:-40}" expect-cli playwright "$1" --description "$2" 2>&1 | tee -a "$LOG"; }
+shot() { p=$(timeout 40 expect-cli screenshot ${2:-} 2>&1 | tee -a "$LOG" | grep -oE '/[^ "]+\.png' | head -1); [ -n "$p" ] && cp -f "$p" "$OUT/$1.png"; }
 
-step "open $URL"; expect-cli open "$URL" --browser chromium --wait-until networkidle 2>&1 | tee -a "$LOG"
+step "open $URL"; timeout 60 expect-cli open "$URL" --browser chromium --wait-until networkidle 2>&1 | tee -a "$LOG"
 step "select $C, convene"
-pw "await page.waitForSelector('select option'); await page.selectOption('select', '$C'); await page.click('button.go');
-    await page.waitForSelector('.agent.running', {timeout: 20000});
-    return await page.evaluate(() => ({claim: document.querySelector('.claimid')?.textContent,
-      running: [...document.querySelectorAll('.agent.running .name')].map(e => e.textContent)}))" "convene $C"
-sleep 25; step "mid-run screenshot (streaming)"; shot 1-streaming
-step "wait for verdict"
-pw "await page.waitForSelector('.verdict', {timeout: 170000}); await page.waitForTimeout(800);
-    return await page.evaluate(() => ({
+pw "await page.waitForSelector('select option'); await page.selectOption('select', '$C'); await page.click('button.go'); return 'clicked'" "convene $C"
+sleep 20; step "mid-run screenshot (streaming)"; shot 1-streaming
+step "poll for verdict"
+for i in $(seq 1 16); do
+  st=$(pw "return await page.evaluate(() => ({verdict: !!document.querySelector('.verdict'), running: [...document.querySelectorAll('.agent.running .name')].map(e => e.textContent)}))" "poll $i" 30 | tr -d '\n ')
+  echo "$st" | grep -q '"verdict":true' && break
+  sleep 10
+done
+pw "return await page.evaluate(() => ({
       claim: document.querySelector('.claimid')?.textContent,
       decision: document.querySelector('.vdec')?.textContent,
       confidence: document.querySelector('.vconf')?.textContent,
@@ -36,11 +38,11 @@ pw "await page.waitForSelector('.verdict', {timeout: 170000}); await page.waitFo
 step "verdict screenshot"; shot 2-verdict --full-page
 if [ "$C" = crash2 ]; then
   step "human approve"
-  pw "await page.click('.human button.ok'); await page.waitForSelector('.recorded', {timeout: 10000});
-      return await page.evaluate(() => document.querySelector('.recorded')?.textContent)" "approve $C"
+  pw "await page.click('.human button.ok'); await page.waitForSelector('.recorded', {timeout: 10000}); return await page.evaluate(() => document.querySelector('.recorded')?.textContent)" "approve $C"
   shot 3-recorded
-  curl -s "${URL%:*}:${API_PORT:-8423}/decisions" | tail -c 400 | tee -a "$LOG"; echo
+  curl -s "http://localhost:${API_PORT:-8423}/decisions" | tail -c 400 | tee -a "$LOG"; echo
 fi
-step "console logs"; expect-cli console_logs 2>&1 | tee -a "$LOG" | tail -5
-expect-cli close 2>&1 | tee -a "$LOG"
+step "console logs"; timeout 30 expect-cli console_logs 2>&1 | tee -a "$LOG" | tail -5
+timeout 30 expect-cli close 2>&1 | tee -a "$LOG"
+cp -f "$(ls -t /tmp/expect-artifacts/session-*.webm 2>/dev/null | head -1)" "$OUT/session.webm" 2>/dev/null
 step "artifacts"; ls -la "$OUT" | tee -a "$LOG"
