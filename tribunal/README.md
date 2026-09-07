@@ -138,6 +138,42 @@ Deploy / redeploy: `tribunal/deploy_aca.sh` (ACR build + ACA app + RBAC) then `t
 
 Detail: [`docs/deploy.md`](docs/deploy.md).
 
+## Beyond the spec
+
+Four pillars bolted onto the four-agent tribunal after the baseline was working, all riding the
+same SSE contract the bench already speaks: an adjuster override becomes a citable precedent, a
+recycled photo is caught before the Fraud Investigator has to infer it, a claimant can appeal
+from their own page, and every verdict clause traces to the evidence that produced it with a
+live what-if on the payout. Same three models, same AI Search service, no new dependency.
+Detail: [`docs/beyond.md`](docs/beyond.md) (backend), [`docs/ui.md`](docs/ui.md) (courtroom bench
++ claimant page).
+
+| pillar | artifact | demo beat |
+|---|---|---|
+| Precedent memory | `tribunal/precedent.py` (`record_precedent`, `search_precedents`), fed into evidence by `gather_evidence` in `workflow.py` | override crash4 "SIU cleared the VIN reuse: bill of sale on file" → re-adjudicate crash4 → the Arbiter names the `PREC-…` in a clause and turns the seeded refer into approve |
+| Recycled-photo detection | `tribunal/photo_index.py` (`match_photo`; seeded so `crash4.jpg` is already filed under `CLM-0412`) | crash4's Exhibit A shows a `.same` row at ~0.93–0.94 similarity against `CLM-0412`, and the Fraud card badges `photo seen · CLM-0412` |
+| Appeals loop + claimant page | `tribunal/appeal.py` (`adjudicate_appeal`); UI route `/claim/<claim_id>` in `ui/src/main.tsx` + `App.tsx` | claimant appeals "bill of sale attached, first claim" on `/claim/<id>` → `appeal.verdict` streams in, v1 \| ribbon \| v2 diff card renders live |
+| Explainable verdict + what-if | Arbiter `clauses[evidence_refs]` (`prompts.py`, passed through by `build_verdict`); `<ol class="clauses">` + deductible slider in `App.tsx` | click a `§`/`#`/`▣`/`¶` clause chip → the cited evidence scrolls into view and highlights; drag the deductible slider → net recomputes live, tagged `WHAT-IF · NOT THE RULING` |
+
+Proof: `node tribunal/validate_appeal.cjs crash4 http://localhost:8423` drives adjudicate →
+decision → appeal through the API with no browser and asserts 7 checks (precedent cited,
+recycled photo detected, clauses present, what-if present, precedent recorded, appeal ruled,
+appeal stored — `logs/tester/validate_appeal.log`, `logs/appeal-crash4/`). Browser walkthrough
+`PW=$(npm root -g)/expect-cli/node_modules/playwright-core node tribunal/validate.cjs crash4
+http://localhost:5802 http://localhost:8423` reaches the same claim through the UI: precedent
+rows and photo matches in the evidence board, clause chips that scroll and highlight, the
+what-if formula rendered, and a claimant appeal reaching UPHELD with both v1/v2 sides shown
+(`logs/expect-crash4/`).
+
+Rehearsal note: every override or appeal writes a real precedent, so a rehearsed crash4 stops
+opening on `refer` once one has landed — reset before a clean run:
+
+```bash
+.venv/bin/python -m tribunal.precedent purge          # deletes every precedent doc
+printf '[]' > tribunal/data/decisions.json
+printf '{}' > tribunal/data/claims.json               # API re-reads on next reload
+```
+
 ## Run
 
 ```bash
@@ -290,3 +326,25 @@ Only the 5 bundled samples are adjudicable; no upload tool. Detail: `tribunal/do
 - Deploy/APIM rough edges: no repo-root `.dockerignore`, `.vscode/mcp.json`'s remote entry not
   committed, no APIM `mcpTools` REST→MCP mapping (our own MCP server serves the tools instead).
   Detail: `tribunal/docs/deploy.md` § What failed, and why.
+- The Arbiter call retries once on failure before `build_verdict` falls back to its designed
+  `refer` / `referral_reason: "arbiter output unparseable"` path with empty clauses; that fallback
+  still fired in one browser-driven run, so a demo that lands on it should just re-run, not debug.
+- Only the UPHELD appeal path (confidence bump, one-row diff) is proven through a real browser
+  walkthrough; the four-row OVERTURN shape (`refer → approve`) is proven only via backend curl
+  transcripts (`logs/beyond-appeal.log`) — rehearsing an overturn needs a precedent purge, a fresh
+  `refer` adjudication, then the appeal.
+- `POST /appeal` promotes v2 to the claim's standing verdict, so a second appeal on the same claim
+  would be judged against v2, not v1; the claimant form is hidden once an appeal exists rather
+  than offering an appeal-of-an-appeal.
+- Policy-section clause chips mostly degrade to flat, non-clickable spans — the Arbiter's
+  paraphrased section titles rarely clear the resolver's two-token overlap threshold; precedent
+  and photo chips resolve reliably.
+- `tribunal/data/claims.json` grows unbounded, one entry per adjudicated claim with the full
+  verdict blob — fine for the demo, not for a long-lived service.
+- Recycled-photo similarity is run-to-run variable (0.93–0.94 on the planted `CLM-0412` duplicate,
+  since the forensic description is regenerated on every call); the 0.85 threshold has held on
+  every run observed but is not a hard guarantee.
+- The what-if slider is read-only exploration: it recomputes net locally and never writes back a
+  chosen figure.
+- Every rehearsal writes a new precedent — run the purge command above before a clean demo, or
+  crash4 opens with nothing left to override.
