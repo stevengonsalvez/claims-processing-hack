@@ -12,7 +12,7 @@ shot() { p=$(timeout 40 expect-cli screenshot ${2:-} 2>&1 | tee -a "$LOG" | grep
 
 step "open $URL"; timeout 60 expect-cli open "$URL" --browser chromium --wait-until networkidle 2>&1 | tee -a "$LOG"
 step "select $C, convene"
-pw "await page.waitForSelector('select option'); await page.selectOption('select', '$C'); await page.click('button.go'); return 'clicked'" "convene $C"
+pw "await page.waitForSelector('select', {state: 'attached'}); await page.selectOption('select', '$C'); await page.click('button.go'); return 'clicked'" "convene $C"
 sleep 20; step "mid-run screenshot (streaming)"; shot 1-streaming
 step "poll for verdict"
 for i in $(seq 1 16); do
