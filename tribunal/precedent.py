@@ -84,8 +84,22 @@ def search_precedents(claim_text: str, top: int = 3) -> list[dict]:
         return []
 
 
+def purge() -> int:
+    """Delete every precedent document. Rehearsal reset: the demo needs an empty index
+    so crash4 opens on REFER before the adjuster override creates the first precedent."""
+    ensure()
+    client = SearchClient(SEARCH_ENDPOINT, PRECEDENT_INDEX, _cred)
+    ids = [{"id": r["id"]} for r in client.search(search_text="*", select=["id"], top=1000)]
+    if ids:
+        client.delete_documents(ids)
+    return len(ids)
+
+
 if __name__ == "__main__":
     import json, sys
+    if len(sys.argv) > 1 and sys.argv[1] == "purge":
+        print(f"purged {purge()} precedents from {PRECEDENT_INDEX}")
+        raise SystemExit(0)
     v = json.load(open(sys.argv[1])) if len(sys.argv) > 1 else json.load(open("tribunal/data/verdict_crash4.json"))
     print(json.dumps(record_precedent(v, "override", "SIU cleared the VIN reuse: vehicle sold by Bennett in June, bill of sale on file"), indent=1))
     print(json.dumps(search_precedents("2011 Subaru Outback rear-end collision same VIN prior claim"), indent=1))
