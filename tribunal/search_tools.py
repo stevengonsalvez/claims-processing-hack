@@ -88,7 +88,7 @@ def search_policies(policy_number: str, claim_text: str) -> list[dict]:
     hits = hybrid(POLICY_INDEX, f"{policy_number} {claim_text}", top=3)
     if not hits:
         return []
-    file_name = hits[0].get("file_name")
+    file_name = str(hits[0].get("file_name", "")).replace("'", "''")  # OData literal escaping
     client = SearchClient(SEARCH_ENDPOINT, POLICY_INDEX, _cred)
     chunks = client.search(search_text="*", filter=f"file_name eq '{file_name}'", top=100,
                            select=["id", "title", "content", "file_name"])
