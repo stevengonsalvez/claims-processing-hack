@@ -35,7 +35,7 @@ const log = (m) => { const l = `--- ${new Date().toISOString().slice(11, 19)} ${
     decision: document.querySelector('.vdec')?.textContent,
     confidence: document.querySelector('.vconf')?.textContent,
     money: [...document.querySelectorAll('.money div')].map(d => d.textContent),
-    fraud: document.querySelector('.fraud b')?.textContent,
+    fraud: document.querySelector('.fraudbar b')?.textContent,
     fraud_evidence: [...document.querySelectorAll('.verdict .ev li')].map(e => e.textContent),
     hot_prior_claims: [...document.querySelectorAll('.panel .ev li.hot')].map(e => e.textContent),
     citations: [...document.querySelectorAll('.cite li')].map(e => e.textContent),
