@@ -76,9 +76,78 @@ def build_verdict(claim_id, claim, adjuster, fraud, policy, arbiter) -> dict:
                    "applicable_coverage": policy.get("applicable_coverage"),
                    "exclusions_triggered": policy.get("exclusions_triggered", []),
                    "citations": policy.get("citations", [])},
+        "clauses": arbiter.get("clauses") or [],
+        "what_if": {"deductible": deductible, "limit": limit, "covered": covered},
         "letter": arbiter.get("letter", ""),
         "claim": claim,
     }
+
+
+# --------------------------------------------------------------------------- #
+# Evidence step (shared by tribunal.workflow, tribunal.af_workflow, tribunal.appeal)
+# --------------------------------------------------------------------------- #
+async def gather_evidence(claim: dict, photo_path: str | None, claim_id: str | None = None,
+                          extra_text: str = "") -> dict:
+    """Prior claims + policy sections + adjuster precedents + prior-photo matches, in parallel.
+
+    Precedent search and photo matching are best-effort: a missing index or a slow
+    describe call must never sink an adjudication, so both degrade to empty.
+    """
+    from . import photo_index, precedent  # local: photo_index imports this module
+
+    summary = claim_summary(claim)
+    query = f"{summary}\n{extra_text}".strip()
+
+    async def _precedents() -> list[dict]:
+        try:
+            return await asyncio.to_thread(precedent.search_precedents, query)
+        except Exception as e:  # noqa: BLE001
+            print(f"search_precedents failed: {e}", file=sys.stderr)
+            return []
+
+    async def _photo() -> tuple[str, list[dict]]:
+        if not photo_path:
+            return "", []
+        try:
+            return await photo_index.match_photo(photo_path, top=3, exclude_claim=claim_id)
+        except Exception as e:  # noqa: BLE001
+            print(f"match_photo failed: {e}", file=sys.stderr)
+            return "", []
+
+    prior, policy_chunks, precedents, (photo_description, photo_matches) = await asyncio.gather(
+        asyncio.to_thread(search_tools.search_prior_claims, query),
+        asyncio.to_thread(search_tools.search_policies, claim.get("policy_number") or "", summary),
+        _precedents(),
+        _photo(),
+    )
+    return {"prior_claims": prior, "policy_chunks": policy_chunks, "precedents": precedents,
+            "photo_matches": photo_matches, "photo_description": photo_description}
+
+
+def evidence_event(ev: dict) -> dict:
+    """The `evidence` SSE payload the React bench consumes."""
+    return {
+        "prior_claims": ev["prior_claims"],
+        "policy_chunks": [{"title": c.get("title"), "score": c.get("score")} for c in ev["policy_chunks"]],
+        "precedents": [{"claim_id": p.get("claim_id"), "human_decision": p.get("human_decision"),
+                        "reason": p.get("reason"), "tribunal_decision": p.get("tribunal_decision"),
+                        "precedent_id": p.get("id"), "similarity": p.get("similarity")}
+                       for p in ev["precedents"]],
+        "photo_matches": ev["photo_matches"],
+        "photo_description": ev["photo_description"],
+    }
+
+
+def precedent_block(ev: dict) -> str:
+    return ("\n\nADJUSTER PRECEDENTS (past human decisions, vector search):\n" +
+            json.dumps([{k: v for k, v in p.items() if k != "content_vector"} for p in ev["precedents"]], indent=1))
+
+
+def photo_block(ev: dict) -> str:
+    if not ev["photo_description"] and not ev["photo_matches"]:
+        return ""
+    return (f"\n\nTHIS PHOTO (forensic description):\n{ev['photo_description']}"
+            f"\n\nPRIOR PHOTOS ON FILE (vector match):\n{json.dumps(ev['photo_matches'], indent=1)}")
 
 
 async def adjudicate(claim_id: str, statement_paths: list[str], photo_path: str | None, emit) -> dict:
@@ -128,14 +197,11 @@ async def adjudicate(claim_id: str, statement_paths: list[str], photo_path: str 
         await done("structure", t0, data=claim)
         await emit("claim", claim)
 
-        # 3. Evidence gathering for the specialists (AI Search)
-        summary = claim_summary(claim)
-        prior, policy_chunks = await asyncio.gather(
-            asyncio.to_thread(search_tools.search_prior_claims, summary),
-            asyncio.to_thread(search_tools.search_policies, claim.get("policy_number") or "", summary),
-        )
-        await emit("evidence", {"prior_claims": prior, "policy_chunks": [
-            {"title": c.get("title"), "score": c.get("score")} for c in policy_chunks]})
+        # 3. Evidence gathering for the specialists: prior claims, policy sections,
+        #    adjuster precedents, prior-photo matches (AI Search, all in parallel)
+        ev = await gather_evidence(claim, photo_path, claim_id)
+        prior, policy_chunks = ev["prior_claims"], ev["policy_chunks"]
+        await emit("evidence", evidence_event(ev))
 
         # 4. Three specialists in parallel
         photo = [image_part(_data_url(photo_path))] if photo_path else []
@@ -143,16 +209,19 @@ async def adjudicate(claim_id: str, statement_paths: list[str], photo_path: str 
         adjuster, fraud, policy = await asyncio.gather(
             opinion("adjuster", prompts.ADJUSTER, [text_part(f"CLAIM:\n{claim_json}")] + photo),
             opinion("fraud", prompts.FRAUD, [text_part(
-                f"CLAIM:\n{claim_json}\n\nPRIOR CLAIMS (vector search, top 5):\n{json.dumps(prior, indent=1)}")] + photo),
+                f"CLAIM:\n{claim_json}\n\nPRIOR CLAIMS (vector search, top 5):\n{json.dumps(prior, indent=1)}"
+                + photo_block(ev) + precedent_block(ev))] + photo),
             opinion("policy", prompts.POLICY, [text_part(
                 f"CLAIM:\n{claim_json}\n\nPOLICY DOCUMENT SECTIONS:\n" +
-                "\n\n".join(f"[{c.get('title')}]\n{c.get('content')}" for c in policy_chunks))]),
+                "\n\n".join(f"[{c.get('title')}]\n{c.get('content')}" for c in policy_chunks)
+                + precedent_block(ev))]),
         )
 
         # 5. Arbiter
         arbiter = await opinion("arbiter", prompts.ARBITER, [text_part(
             f"CLAIM:\n{claim_json}\n\nADJUSTER:\n{json.dumps(adjuster, indent=1)}\n\n"
-            f"FRAUD INVESTIGATOR:\n{json.dumps(fraud, indent=1)}\n\nPOLICY ANALYST:\n{json.dumps(policy, indent=1)}")])
+            f"FRAUD INVESTIGATOR:\n{json.dumps(fraud, indent=1)}\n\nPOLICY ANALYST:\n{json.dumps(policy, indent=1)}"
+            + precedent_block(ev) + photo_block(ev))])
 
         verdict = build_verdict(claim_id, claim, adjuster, fraud, policy, arbiter)
         try:  # telemetry must never break an adjudication
