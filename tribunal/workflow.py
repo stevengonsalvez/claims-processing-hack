@@ -11,7 +11,7 @@ import time
 
 from . import prompts, search_tools
 from .foundry import MODEL, image_part, parse_json, run_agent, split_opinion, text_part
-from .telemetry import agent_span, span
+from .telemetry import agent_span, record_verdict, span
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(os.path.join(REPO, "challenge-2", "agents"))
@@ -155,5 +155,9 @@ async def adjudicate(claim_id: str, statement_paths: list[str], photo_path: str 
             f"FRAUD INVESTIGATOR:\n{json.dumps(fraud, indent=1)}\n\nPOLICY ANALYST:\n{json.dumps(policy, indent=1)}")])
 
         verdict = build_verdict(claim_id, claim, adjuster, fraud, policy, arbiter)
+        try:  # telemetry must never break an adjudication
+            record_verdict(verdict)
+        except Exception as e:  # noqa: BLE001
+            print(f"record_verdict failed: {e}", file=sys.stderr)
         await emit("verdict", verdict)
         return verdict
