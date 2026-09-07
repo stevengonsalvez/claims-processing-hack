@@ -16,7 +16,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from .workflow import REPO, adjudicate
+from .af_workflow import adjudicate  # Challenge 4: Microsoft Agent Framework workflow graph
+from .workflow import REPO
 
 DATA = os.path.join(REPO, "challenge-0", "data")
 DECISIONS = os.path.join(os.path.dirname(__file__), "data", "decisions.json")
