@@ -14,12 +14,12 @@ Foundry agent versions are warm. Do not save any tribunal/*.py file during the d
 | 2:30 | crash4, refer | Coverage is fine. But the fraud investigator ran a vector search over prior claims: same VIN, same damage, paid two months ago under another name. | Evidence panel: CLM-0412 highlighted; disagreement "adjuster vs fraud"; REFER |
 | 3:30 | observability | Every agent is a span. | App Insights: `tribunal.adjudicate` with six `agent *` children, three overlapping |
 | 4:00 | evidence of rigour | Scorecard 5/5 vs ground truth; evaluators; recorded browser runs; alert rule on fraud referrals. | `tribunal/data/scorecard.md`, `quality.md`, `explainers/claims-tribunal-validation.html` |
-| 4:00 | claimant appeals | Open the claimant page from the bench. The claimant says: bought the Outback from Bennett in June, bill of sale attached. Session 2 answers verdict v1 clause by clause. | `/claim/<id>`: v1 vs v2 side by side, diff highlighted, outcome OVERTURN |
-| 4:40 | adjuster signs off | Override with the SIU reason. That ruling is now a precedent: run crash4 again and the tribunal cites it. | Evidence board: Precedents row; verdict clause chip → precedent |
+| 4:00 | claimant appeals | Open the claimant page from the bench. The claimant writes: bought the Outback from Bennett in June, bill of sale attached (but attaches nothing). Session 2 answers verdict v1 clause by clause and UPHOLDS: the tribunal does not fold for an unproven claim. | `/claim/<id>`: v1 vs v2 side by side, UPHELD seal, clause chips |
+| 4:40 | adjuster signs off | The adjuster has the SIU letter: Override with the reason. That ruling is now a precedent: run crash4 again and the tribunal cites it and approves. | Human sign-off → Precedents row on the evidence board; verdict clause chip → precedent |
 | 5:00 | beyond | Recycled-photo match (crash4.jpg filed under CLM-0412 at 0.94), Agent Framework executors, MCP in VS Code / Claude Desktop, Container Apps + APIM, three-way OCR benchmark, cloud eval + red team. | `tribunal/README.md` Challenge coverage + Beyond the spec |
 
 Fallbacks: if a run stalls past 60 s, reload and re-convene (agents are cached per process). If the
 Foundry endpoint 429s, `logs/expect-crash4/session.webm` is a recorded run of the same claim.
 
-Numbers to quote (last recorded runs): crash2 approve 43.5 s, net $10,900; crash1 deny 36.5 s,
-confidence 1.00; crash4 refer 44.7 s, fraud 0.85, CLM-0412 similarity 0.783.
+Numbers to quote (last recorded runs): crash2 approve 40.2 s, net $11,500; crash1 deny 36.5 s,
+confidence 1.00; crash4 refer 48.9 s, fraud 0.85, CLM-0412 similarity 0.781, photo match 0.944 (SAME PHOTO).
