@@ -35,6 +35,109 @@ statement pages + damage photo
    every step: OTel span -> Application Insights / Foundry tracing
 ```
 
+## Challenge coverage
+
+`tribunal/` is the differentiator: one four-agent adjudication pipeline that does Ch1's
+retrieval, Ch2/Ch6's agents and Ch3's observability inside a single live-streamed workflow, then
+goes further than any one challenge asks for (three-way OCR bench, cloud + continuous eval, red
+team, ACA + APIM + MCP deploy). It does not touch `challenge-0..6/` baseline code.
+
+| challenge | basic (upstream) | status | artifact |
+|---|---|---|---|
+| Ch0 | environment + resource deployment | done | `tribunal/deploy_infra.sh` (Foundry, AI Search, App Insights via `az rest`) |
+| Ch1 | document processing + vectorized search | done, exceeds baseline | [`docs/ocr-comparison.md`](docs/ocr-comparison.md), [`docs/search.md`](docs/search.md) |
+| Ch2 | OCR + JSON-structuring agents | done, subsumed into the tribunal | `af_workflow.py` (`OcrExecutor`, `StructureExecutor`), `prompts.py` |
+| Ch3 | observability, evaluation, red team, alerting | done | [`docs/evaluation.md`](docs/evaluation.md), [`docs/alerting.md`](docs/alerting.md) |
+| Ch4 | multi-agent workflow + API deployment | done, adds MCP + APIM | [`docs/deploy.md`](docs/deploy.md) |
+| Ch5 | claims processing UI | done, differently (React live agent timeline, not a Streamlit upload form) | `ui/` |
+| Ch6 | policy matching + coverage validation | done, subsumed into the tribunal | Policy Analyst + Arbiter in `af_workflow.py`; `eval.py` scores vs `challenge-6/coverage_ground_truth.json` |
+
+### OCR comparison (Ch1)
+
+`tribunal/ocr_bench.py` runs Azure AI Document Intelligence (prebuilt-read), Mistral Document AI
+and gpt-4.1-mini vision over all 10 statement pages and scores each against
+`challenge-3/ground_truth.json`. Result of the run of 2026-09-07 13:17:04 BST:
+
+| approach | fields found / 99 scorable | median latency / page | cost / 1000 claims |
+|---|---|---|---|
+| Azure Document Intelligence (prebuilt-read) | 93 (93.9%) | 2.29s | $3.00 |
+| Mistral Document AI (mistral-document-ai-2512) | 93 (93.9%) | 1.75s | $4.00 |
+| gpt-4.1-mini vision (Responses API) | 92 (92.9%) | 5.31s | $1.59 |
+
+Accuracy doesn't decide it: the three land within one field of each other, and within noise once
+the unscorable `incident_description` field (a paraphrase, not page text) is set aside. Ships as:
+Mistral for the bulk transcript (flat per-page cost, lowest latency, on the critical path before
+any agent starts), gpt-4.1-mini vision reserved for what page-OCR can't do — reading the damage
+photo and returning structured claim JSON. Full method, scoring rule, prices and the ground-truth
+bug the bench found in `challenge-3/ground_truth.json` (`crash3 police_report_number`):
+[`docs/ocr-comparison.md`](docs/ocr-comparison.md). Re-run: `.venv/bin/python -m tribunal.ocr_bench`
+(not during a demo — shares the rate-limited Mistral deployment).
+
+### Search (Ch1)
+
+`search_tools.py`, `seed.py`, `blob_upload.py`:
+
+- Source docs live in Blob Storage (`claims-data/{policies,statements,images}`); every policy
+  chunk carries its `source_url`.
+- Integrated vectorization: `AzureOpenAIVectorizer` on both indexes, server-side
+  `VectorizableTextQuery` at query time — no client-side embedding call on the query path.
+- Keyword + vector hybrid search (RRF fusion) and a semantic ranker (`insurance-semantic`,
+  reranker score returned per chunk).
+- Deterministic policy selection: the claim's OCR'd policy number is resolved against the
+  index's 5 codes (OCR spacing/punctuation tolerated) and pulled by exact filter
+  (`policy_number eq '<pn>'`) — never left to ranking, so a claim is never judged against another
+  customer's contract.
+- Graceful degradation, both paths logged: a failing semantic call retries as plain hybrid; an
+  unresolved policy number falls back to best-effort text ranking, which cannot reliably separate
+  the five auto policies.
+
+Gap: `source_url` and the reranker score reach `search_policies` but not the UI yet —
+`workflow.py` emits policy evidence as `{title, score}`. Detail + the one-line fix:
+[`docs/search.md`](docs/search.md).
+
+### Evaluation (Ch3)
+
+| stage | command | output |
+|---|---|---|
+| Decision accuracy | `python -m tribunal.eval` | `tribunal/data/scorecard.md` vs `challenge-6/coverage_ground_truth.json` |
+| Local quality | `python -m tribunal.quality` | `tribunal/data/quality.md` (groundedness / relevance / coherence / fluency / content safety) |
+| Cloud evaluation | `python -m tribunal.cloud_eval` | `tribunal/data/cloud_eval.md` + Foundry **Evaluation** tab |
+| Continuous evaluation | `python -m tribunal.cloud_eval --continuous` | Foundry **Evaluation ▸ Continuous evaluation**, scores every `TribunalArbiterAgent` response |
+| Red teaming | `python -m tribunal.redteam --both` | `tribunal/data/redteam.md` + Foundry **AI red teaming** tab (service scan) + local injection probe |
+| Alerting | `tribunal/alerts.sh` | fraud-referral alert, `fraud_score > 0.6` → email; detail: [`docs/alerting.md`](docs/alerting.md) |
+
+- Red team service scan: 0/12 attack success (violence, hate-unfairness — the SDK's generic harm
+  categories, not domain-specific ones). The local claimant-authored injection probe is
+  non-deterministic: 0/8–2/8 attack success across runs of the same eight prompts.
+- Judge model is our own `gpt-4.1-mini` deployment — quality scores are self-judged; the hack's
+  fixed model set has no independent judge available.
+- Needs `azure-ai-evaluation[redteam]` (pyrit + ~40 packages, additive-only); not yet added to
+  `requirements.txt`.
+
+Detail: [`docs/evaluation.md`](docs/evaluation.md).
+
+### Deployment (Ch4)
+
+One container serves REST and MCP (streamable HTTP), both published through Azure API Management:
+
+| what | URL |
+|---|---|
+| Container App | `https://claims-tribunal.niceglacier-506f72ec.swedencentral.azurecontainerapps.io` |
+| APIM gateway | `https://msagthack-apim-6ahymubsyajs6.azure-api.net` |
+| REST via APIM | `.../tribunal/samples` |
+| **MCP via APIM** | `.../tribunal-mcp` |
+
+Deploy / redeploy: `tribunal/deploy_aca.sh` (ACR build + ACA app + RBAC) then `tribunal/apim_mcp.sh`
+(APIM apis + MCP server); both idempotent, ~5 min each, both proof the result before exiting 0.
+
+- No auth on either the Container App or APIM (`subscriptionRequired: false` on all three apis) —
+  deliberate for the demo's key-less MCP client; patch loop to close it afterwards is in
+  `docs/deploy.md`.
+- The deployed image is a snapshot (`claims-tribunal:202609071304`); other tracks kept editing
+  `tribunal/*.py` after that build — re-run `deploy_aca.sh` if code moved since.
+
+Detail: [`docs/deploy.md`](docs/deploy.md).
+
 ## Run
 
 ```bash
@@ -50,7 +153,7 @@ tribunal/alerts.sh                       # upsert the fraud-referral alert rule 
 
 | claim | what the tribunal does | why it lands |
 |---|---|---|
-| crash2 | COMM-AUTO-001, clean corpus, photo matches statement: **approve**, net payout after $500 deductible | shows the happy path and the money maths |
+| crash2 | COMP-AUTO-001, clean corpus, photo matches statement: **approve**, net payout after $500 deductible | shows the happy path and the money maths |
 | crash1 | LIAB-AUTO-001, own-vehicle damage: Policy Analyst cites Section 4.1, **deny**, letter explains it | catches the trap in the ground truth |
 | crash4 | COMM-AUTO-001, coverage says APPROVED, but CLM-0412 has the same VIN and same damage paid 3 months ago under another name: Fraud Investigator 0.75+, Arbiter **refers**, disagreement panel shows adjuster vs fraud | agents visibly disagree, human gate matters |
 
@@ -65,11 +168,18 @@ trace with six `agent *` spans, parallel fan-out visible in the waterfall.
 | `workflow.py` | reference orchestrator (`asyncio.gather`); still the source of `build_verdict`, `claim_summary`, `LABELS` |
 | `prompts.py` | the four tribunal prompts + structuring prompt |
 | `foundry.py` | Foundry agent creation (once per process) + streaming Responses calls |
-| `search_tools.py` | AI Search indexes, embeddings, hybrid + vector queries |
+| `search_tools.py` | AI Search: integrated vectorization (`AzureOpenAIVectorizer`), hybrid keyword+vector, semantic reranker, deterministic `policy_number` document anchor, Blob `source_url` on every chunk. See [docs/search.md](docs/search.md) |
 | `seed.py` | policy chunks + synthetic prior claims with planted fraud |
+| `blob_upload.py` | uploads challenge-0 policies/statements/images to Blob `claims-data/` |
 | `api.py` | FastAPI: SSE stream, human decision log, sample claims |
 | `telemetry.py` | OpenTelemetry to Application Insights, gen_ai.* attributes |
 | `eval.py` | scorecard against Challenge 6 ground truth |
+| `quality.py` | local groundedness/relevance/coherence/fluency/content-safety evaluator loop |
+| `cloud_eval.py` | same evaluators uploaded to Foundry, plus the continuous-evaluation rule |
+| `redteam.py` | Foundry AI Red Teaming Agent scan + local prompt-injection probe |
+| `ocr_bench.py` | three-way OCR comparison (Doc Intelligence / Mistral / gpt-4.1-mini vision). See [docs/ocr-comparison.md](docs/ocr-comparison.md) |
+| `deploy_aca.sh`, `apim_mcp.sh` | Container Apps + APIM deploy (REST + MCP). See [docs/deploy.md](docs/deploy.md) |
+| `mcp_http.py` | MCP server over streamable HTTP, mounted next to the FastAPI app for the ACA/APIM deploy |
 | `ui/` | React + Vite: live agent timeline, verdict card, human gate |
 
 ## Microsoft Agent Framework
@@ -145,7 +255,9 @@ and restart the app:
 }
 ```
 
-Local only (stdio, no auth); remote/APIM exposure is a Challenge 4 follow-up.
+Also deployed: Container Apps + APIM MCP server at
+`https://msagthack-apim-6ahymubsyajs6.azure-api.net/tribunal-mcp` — stdio above is the local path;
+neither has auth. Detail: `tribunal/docs/deploy.md`.
 `adjudicate_claim` takes ~40-45 s (six model calls): raise a short client tool timeout.
 Only the 5 bundled samples are adjudicable; no upload tool. Detail: `tribunal/docs/mcp.md`.
 
@@ -166,3 +278,15 @@ Only the 5 bundled samples are adjudicable; no upload tool. Detail: `tribunal/do
   only proven via stdio + `mcp_check.py`.
 - Only the fraud-referral alert firing was observed; the negative case (`fraud_score <= 0.6`
   staying quiet) was not separately tested.
+- `ensure_index` still embeds `AZURE_OPENAI_KEY` in the index vectorizer definition (same as the
+  baseline notebook); managed identity is the production shape.
+- crash5 scored low in the cloud-eval run (groundedness/coherence/fluency 2.0) against an earlier
+  local run (groundedness 4.0) — a real verdict-quality signal on crash5, unresolved.
+- Continuous evaluation is registered and enabled; a scored row landing under Foundry
+  **Evaluation ▸ Continuous evaluation** from a live UI-driven run has not been directly observed.
+- Verdict nondeterminism reproduces through the deployed MCP path too: crash2 has returned
+  approve (net $9,400 / $9,800 / $11,900) and once deny when OCR misread the policy number as
+  `C044-AUTO-001`; crash1 matched ground truth (deny) in the one run captured.
+- Deploy/APIM rough edges: no repo-root `.dockerignore`, `.vscode/mcp.json`'s remote entry not
+  committed, no APIM `mcpTools` REST→MCP mapping (our own MCP server serves the tools instead).
+  Detail: `tribunal/docs/deploy.md` § What failed, and why.
