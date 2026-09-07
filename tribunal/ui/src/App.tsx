@@ -76,9 +76,9 @@ export default function App() {
   }
 
   async function record(kind: string) {
-    setDecision(kind)
-    await fetch(`${API}/decision`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res = await fetch(`${API}/decision`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ claim_id: claimId, human_decision: kind, reason: override, tribunal_decision: verdict?.decision, net: verdict?.payout?.net, fraud: verdict?.fraud?.score }) })
+    setDecision(res.ok ? kind : `${kind} (API error ${res.status})`)
   }
 
   const photoUrl = files.photo ? URL.createObjectURL(files.photo) : sample ? `${API}${samples.find(s => s.name === sample)?.photo}` : ''
@@ -164,7 +164,7 @@ function Verdict({ v, decision, override, setOverride, record }: any) {
         <div><span>claimed</span>{usd(p.claimed)}</div><div><span>covered</span>{usd(p.covered)}</div>
         <div><span>deductible</span>{usd(p.deductible)}</div><div className="net"><span>net payout</span>{usd(p.net)}</div>
       </div>
-      <div className="fraud"><span>fraud risk</span><div className="bar"><i style={{ width: `${Math.round((v.fraud?.score ?? 0) * 100)}%` }} /></div><b>{Number(v.fraud?.score ?? 0).toFixed(2)}</b></div>
+      <div className="fraudbar"><span>fraud risk</span><div className="bar"><i style={{ width: `${Math.round((v.fraud?.score ?? 0) * 100)}%` }} /></div><b>{Number(v.fraud?.score ?? 0).toFixed(2)}</b></div>
       {v.fraud?.evidence?.length > 0 && <ul className="ev">{v.fraud.evidence.map((e: any, i: number) => <li key={i}><b>{e.type}</b> {e.detail}{e.ref ? ` (${e.ref})` : ''}</li>)}</ul>}
       {v.policy?.citations?.length > 0 && <ul className="cite">{v.policy.citations.map((c: string, i: number) => <li key={i}>{c}</li>)}</ul>}
       <details><summary>Letter to claimant</summary><pre>{v.letter}</pre></details>
