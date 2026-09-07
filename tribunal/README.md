@@ -68,3 +68,19 @@ trace with six `agent *` spans, parallel fan-out visible in the waterfall.
 | `telemetry.py` | OpenTelemetry to Application Insights, gen_ai.* attributes |
 | `eval.py` | scorecard against Challenge 6 ground truth |
 | `ui/` | React + Vite: live agent timeline, verdict card, human gate |
+
+## Validation
+
+```bash
+API_PORT=8423 tribunal/validate.sh crash2     # expect-cli headless walkthrough, artifacts in logs/expect-crash2/
+```
+
+Each run records `run.log`, `verdict.json` (DOM assertions), screenshots (streaming, verdict,
+recorded decision) and the Playwright session video.
+
+## Limitations
+
+- No authentication on the API: local demo only, bind to localhost.
+- Decisions persist to a JSON file, not Cosmos.
+- Prior-claims corpus is synthetic; two fraud signals are planted on purpose (CLM-0412, CLM-0431/0432).
+- Similarity scores are Azure AI Search HNSW cosine scores (1.0 = identical); 0.75+ is treated as strong.
