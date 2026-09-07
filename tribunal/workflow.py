@@ -49,6 +49,9 @@ def _money(v) -> int:
 def build_verdict(claim_id, claim, adjuster, fraud, policy, arbiter) -> dict:
     p = arbiter.get("payout") or {}
     decision = arbiter.get("decision", "refer")
+    if not arbiter.get("decision"):  # unparseable or missing arbiter output: refer, and say why
+        arbiter = {**arbiter, "rationale": "Arbiter output could not be parsed; referred for human review.",
+                   "referral_reason": "arbiter output unparseable", "confidence": 0}
     covered = _money(p.get("covered"))
     deductible = _money(p.get("deductible") or policy.get("deductible"))
     limit = _money(p.get("limit") or policy.get("coverage_limit")) or None
