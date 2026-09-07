@@ -117,3 +117,160 @@ Artifacts: `logs/expect-crash2/`, `logs/expect-crash4/` (verdict.json + screensh
   the page, so the collapse is there for keyboard users rather than as a default.
 - Uploaded statement pages are not previewed as exhibits; only the damage photo is.
 - The transcript panes have fixed max heights; a very long arbiter argument still scrolls.
+
+## Round two — precedent, explanation, and the claimant's side
+
+Three things were added on top of the courtroom, all consuming fields the backend added in the
+same round. Every one of them degrades to nothing if its field is absent: the section simply
+does not render, and no run is ever blocked by a missing block.
+
+### 1. The evidence board grew two more kinds of memory
+
+**Precedents (`evidence.precedents`)** get their own `<ul class="prec">` under the prior-claims
+list: mono claim id in brass, then `REFER → APPROVE` where the arrow and the human's word are
+brass because that is where the authority sits, then the adjuster's reason set in quoted serif
+italic. The reason is the whole point of a precedent, so it is typeset as prose, not as a field.
+A caption states the stakes plainly: *"A human overrode the bench here. The tribunal is told, and
+must answer it."*
+
+**Photo matches (`evidence.photo_matches`)** live under **Exhibit A**, not in the evidence panel,
+because they are a fact about the exhibit: this photograph has been filed before. A row at
+similarity ≥ 0.90 takes `.same` and a red `same photo` tag in `--no` (the strongest fraud signal
+on the page) rather than the amber `match` used for a merely-similar prior claim. The forensic
+`photo_description` replaces the generic exhibit caption. When the list is empty the panel says
+*"No prior photo resembles Exhibit A"* — on crash2 that absence is itself worth showing.
+
+**Similarity bars are zoomed.** They previously mapped 0–1 onto the track, so crash4's cluster of
+0.718–0.785 painted five bars all ~74% wide and only the hairline was readable. One helper,
+`simPct(x)`, now maps **0.50–1.00** onto 0–100% and the hairline moved to `left: 50%` (= 0.75).
+Prior claims, precedents and photo matches share that one scale, and the caption states the
+domain. The `.ev li.hot` logic for prior claims is untouched — `validate.cjs` asserts it.
+
+The Fraud Investigator's card grows a second badge, `photo seen · CLM-0412`, when the top photo
+match is ≥ 0.85, so the recycled-photo finding is on the card that found it and not only in the
+record. Policy chips are capped at six behind a `+N more` toggle; fourteen unranked chips were
+pushing the ruling below the fold for no information gain.
+
+### 2. The ruling explains itself, and you can interrogate the arithmetic
+
+**Clauses (`verdict.clauses`)** render as an `<ol class="clauses">` after the rationale — a
+deliberately *different* class from `.ev`, which `validate.cjs` reads as fraud evidence. Each
+clause is serif prose with its `evidence_refs` below it as chips, glyph-prefixed by kind:
+`§` policy, `#` prior claim, `▣` photo, `¶` precedent.
+
+Clicking a chip is the load-bearing interaction. Every citable row carries a `data-ref`
+(`policy:<section>` on `.pols li`, `prior_claim:<id>` on the prior `.ev li`, `photo:<id>` on
+`.shots li`, `precedent:<precedent_id>` with `data-alt="precedent:<claim_id>"` on `.prec li`),
+and the chip scrolls that row to the centre of the viewport, focuses it and lights it with a
+brass outline for 1600 ms. Roughly 1,300 px separate the ruling from the record, so a class
+toggle alone would have lit something nobody could see. A chip whose target is not on the page
+renders as a `<span class="ref flat">`, not a dead button.
+
+**What-if deductible.** `verdict.what_if {deductible, limit, covered}` drives a range slider
+placed immediately *after* `.money` — never inside it, because `validate.cjs` requires exactly
+four un-nested `div` cells. Net is recomputed entirely locally,
+`max(0, min(covered, limit ?? covered) − d)`, so there is no round trip. While the slider is off
+the ruling's own value, the deductible and net cells go dashed-brass `.hypothetical`, and a mono
+formula line reads `$5,300 covered − $1,000 deductible = $4,300 · WHAT-IF · NOT THE RULING`. The
+initial render equals the server's numbers exactly, so the assert on `.money` text is unchanged.
+`aria-valuetext` speaks both numbers.
+
+**The header carries the ruling.** `.status.ruled` takes `data-decision` and the pip takes the
+verdict colour instead of always green; the text is `Adjourned · REFER · 41.5s`, and after an
+appeal `Adjourned · OVERTURNED → APPROVE`.
+
+**The override reason invites a precedent.** It was a single-line input beside two coloured
+buttons; "SIU cleared the VIN reuse: bill of sale on file" was never going to be typed into that.
+It is now a two-row `<textarea>` placeheld *"Reason for the record. It becomes a precedent the
+next tribunal can cite."* `POST /decision` sends the full `verdict` per the new contract, and the
+receipt reads `Human decision recorded: override · precedent PREC-…` with the id in mono brass.
+
+### 3. `/claim/<id>` — the claimant's side of the building
+
+`main.tsx` branches on `location.pathname` (`/^\/claim\/([^/?#]+)/`). No router dependency for
+one branch. The bench grows a `Claimant view →` link once it has ruled.
+
+The palette inverts: `body.claimant` is the paper ground, serif throughout, 720 px column, brass
+rules. This deliberately is **not** the bench with the roster removed — the claimant does not sit
+in the chamber, so there are no transcripts, no waterfall, no agent cards. They get a seal, one
+status line with the decision as a small unrotated stamp, the letter as a document, and a form.
+
+Appealing streams `POST /appeal` through the same `readSSE`. Instead of transcripts the claimant
+sees a six-name list ticking `waiting → hearing⌷ → heard ✓` on `agent.done`, with an elapsed
+clock. On `appeal.verdict` a serif sentence states the outcome ("The tribunal overturned its
+decision."), the v2 letter replaces v1 with a `Revised <date>` letterhead, and `AppealDiff`
+renders **v1 | ribbon | v2**: two mini verdicts in their own decision colours, a vertical brass
+ribbon reading OVERTURNED or UPHELD with the appeal quoted beneath it and a `new photo` chip, the
+`diff[]` rows as `FIELD  <s>old</s> → new`, and the v2 clauses through the same `Clauses`
+component, chips and all. The same component renders on the bench below the verdict when
+`GET /claims/{id}` reports an appeal, so both sides see the identical diff. A failed stream is a
+`role="alert"`: *"The appeal could not be heard; your claim stays as decided."* A claim with no
+file on record renders *"No claim `<id>` is on file"* and a way back.
+
+Bench keyboard shortcuts are not mounted on this route: `App` never renders, so its listener
+never binds.
+
+### DOM contract, extended
+
+New hooks, all chosen so the round-one asserts keep passing: `.prec li[data-ref]`,
+`.shots li[data-ref]` (`.same` for ≥ 0.90), `.clauses li` + `button.ref`, `.lit`, `.whatif`
+(`input[type=range]`, `.formula`, `.reset`), `.money div.hypothetical`, `.precid`,
+`.claimant-link`, `.status[data-decision]`, `.more`, and on the claimant route `.cl`,
+`.clstatus .vdec`, `form.appeal textarea`, `button.appeal-go`, `.clsteps li`, `.appeal-diff`,
+`.appeal-diff .vs`, `.appeal-diff .outcome`, `.diff li`.
+
+Deliberately **not** reused: `.ev` and `.hot`. `validate.cjs` reads `.panel .ev li.hot` as prior
+claims and `.verdict .ev li` as fraud evidence; precedents, photo matches and clauses would have
+silently corrupted both scrapes.
+
+`validate.cjs` was extended, not replaced. It now also scrapes precedents, photo matches,
+clauses, clause chips, the what-if formula and the status pill; clicks the first clause chip and
+counts `.lit`; then opens `/claim/<id>`, lodges the appeal *"I bought the Outback from Andrew
+Bennett in June 2025, bill of sale attached, this is my first claim"*, waits for `.appeal-diff`,
+screenshots `4-claimant.png` and `4-claimant-appeal.png`, and fails hard if the v1 and v2 cards
+or the outcome ribbon are missing. The crash2 leg (approve → `decisions.json`) is untouched.
+
+## Round-two proof
+
+```
+cd tribunal/ui && npm run build                                   # clean
+PW=$(npm root -g)/expect-cli/node_modules/playwright-core node tribunal/validate.cjs crash4 http://localhost:5802 http://localhost:8423
+```
+
+Artifacts: `logs/expect-crash4/{verdict.json,2-verdict.png,4-claimant.png,4-claimant-appeal.png,session.webm}`
+and the transcript in `logs/ui-r2-validate.log`.
+
+### Round-two results (last run, `logs/expect-crash4/`)
+
+`decision approve` · pill `Adjourned · APPROVE · 42.3s` · **`console_errors: []`** · 3 precedent
+rows · 3 photo rows, the top one `.same` (crash4.jpg already filed under CLM-0412) · 1 hot prior
+claim · 3 clauses with live ref chips, `.lit` count 1 after clicking `¶ Precedent clearing VIN
+reuse` · what-if formula rendered from `verdict.what_if` · claimant appeal `UPHELD`, both v1 and
+v2 cards (`$3,850` each), diff row `confidence 0.9 → 0.95`, revised letter re-issued.
+
+Two bugs the screenshots caught and this round fixed:
+
+1. **Every clause chip was dead.** The exact-match resolver found nothing, because the Arbiter
+   cites in its own words: `PREC-CLM-20260907-D865E7` for a precedent the record lists as
+   `CLM-20260907-D865E7`, `"Coverage Components: Collision Coverage"` for a section titled
+   `"Collision Coverage"`. `findRef()` now tries exact, then containment either way, then best
+   token overlap (≥2 meaningful words), and a chip with no resolvable target still degrades to a
+   flat `<span>`. Chips went from 0 live to live-and-scrolling.
+2. **A black band across the claimant's letter.** `App.css` styles the bare element selector
+   `header` as the chamber's sticky dark masthead, so the claimant page's own `<header>`
+   inherited `position: sticky` + `--bg` and floated over the paper. Scoped out under
+   `body.claimant .clhead`.
+
+### Round-two known gaps
+
+- The bench's `GET /claims/{id}` probe (for the appeal diff) fired on the same tick as the
+  verdict and 404'd, because the API writes the case file through just after emitting the
+  verdict. Harmless — it is caught — but it logged one console error, so the probe is now
+  deferred 2.5 s. Re-proven: the recorded run reports `console_errors: []`.
+- `appeal.verdict.diff` came back with one row (confidence) on an uphold, so the `<ul class="diff">`
+  is proven thin. The overturn shape (four rows, `refer → approve`) is proven only through the
+  backend's own `logs/beyond-appeal.log`, not through this browser run.
+- A second appeal on the same claim is judged against v2, so the claimant form is hidden once an
+  appeal exists rather than offering an appeal-of-an-appeal.
+- The what-if slider recomputes net locally and never writes; there is no "adopt this figure"
+  path, by design — the ruling is the ruling.
