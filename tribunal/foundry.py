@@ -77,7 +77,10 @@ def parse_json(text: str) -> dict:
     try:
         return json.loads(m.group(0))
     except json.JSONDecodeError:
-        return {}
+        try:  # letters carry raw newlines inside JSON strings; strict=False accepts control characters
+            return json.loads(m.group(0), strict=False)
+        except json.JSONDecodeError:
+            return {}
 
 
 def split_opinion(text: str) -> tuple[str, dict]:
