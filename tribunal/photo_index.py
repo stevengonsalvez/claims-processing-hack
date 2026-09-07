@@ -27,8 +27,19 @@ which panels are damaged and how, distinctive marks (stickers, plate fragments, 
 One dense paragraph, no speculation about cause. No preamble."""
 
 
-async def describe(photo_path: str) -> str:
-    return await run_agent("TribunalPhotoDescriber", DESCRIBE, [text_part("Photo:"), image_part(_data_url(photo_path))])
+async def describe(photo_path: str, attempts: int = 2) -> str:
+    """Forensic description of one damage photo. Retried once: the describe call runs
+    alongside the three specialists and occasionally loses the connection."""
+    parts = [text_part("Photo:"), image_part(_data_url(photo_path))]
+    for attempt in range(attempts):
+        try:
+            return await run_agent("TribunalPhotoDescriber", DESCRIBE, parts)
+        except Exception as e:  # noqa: BLE001
+            if attempt == attempts - 1:
+                raise
+            print(f"describe({os.path.basename(photo_path)}) failed, retrying: {e}", file=sys.stderr)
+            await asyncio.sleep(1.5)
+    return ""
 
 
 def ensure() -> None:
