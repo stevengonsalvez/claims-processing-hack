@@ -207,7 +207,8 @@ marimo/_lsp/
 __marimo__/
 
 # tribunal
-tribunal/data/
+tribunal/data/decisions.json
+tribunal/data/claims.json
 tribunal/ui/node_modules/
 tribunal/ui/dist/
 logs/
