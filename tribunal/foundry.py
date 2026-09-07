@@ -37,7 +37,7 @@ async def ensure_agent(name: str, instructions: str) -> str:
         if name not in _versions:
             project, _ = await clients()
             agent = await project.agents.create_version(
-                agent_name=name,
+                agent_name=name + os.environ.get("TRIBUNAL_AGENT_SUFFIX", ""),  # separate versions for model comparisons
                 definition=PromptAgentDefinition(model=MODEL, instructions=instructions),
             )
             _versions[name] = agent.name
