@@ -1,0 +1,117 @@
+{
+ "claim_id": "EVAL-crash4",
+ "decision": "refer",
+ "confidence": 0.85,
+ "rationale": "High fraud risk due to a similar, previously approved claim on the same vehicle, combined with inconsistencies in damage assessment and claimant identity. Coverage is confirmed, but the fraud score above 0.6 mandates referral for further human investigation.",
+ "disagreements": [
+  {
+   "between": "adjuster vs fraud",
+   "resolution": "Fraud suspicion outweighs the adjuster's damage assessment; refer claim instead of approval."
+  },
+  {
+   "between": "fraud vs policy analyst",
+   "resolution": "Despite coverage, high fraud risk necessitates referral over simple approval."
+  }
+ ],
+ "referral_reason": "Fraud risk score 0.8, prior similar claim on same vehicle with different claimant, potential insurance fraud.",
+ "payout": {
+  "claimed": 5400,
+  "covered": 5400,
+  "deductible": 500,
+  "limit": 50000,
+  "net": 4900,
+  "items": [
+   {
+    "part": "rear quarter panel",
+    "action": "replace",
+    "cost": 1500
+   },
+   {
+    "part": "rear bumper",
+    "action": "replace",
+    "cost": 900
+   },
+   {
+    "part": "rear hatch door",
+    "action": "repair",
+    "cost": 700
+   },
+   {
+    "part": "rear driver's side taillight",
+    "action": "replace",
+    "cost": 300
+   },
+   {
+    "part": "rear suspension",
+    "action": "inspect and repair",
+    "cost": 1200
+   },
+   {
+    "part": "paint",
+    "action": "refinish",
+    "cost": 800
+   }
+  ]
+ },
+ "fraud": {
+  "score": 0.8,
+  "evidence": [
+   {
+    "type": "similar_claim",
+    "detail": "Identical VIN 4S4BRBCC2B3378210 and nearly identical rear damage description previously paid under claim CLM-0412 on 2025-05-14 with claimant Andrew Bennett, now claimed by John Peterson two months later.",
+    "ref": "CLM-0412",
+    "similarity": 0.78
+   },
+   {
+    "type": "repeat_claimant",
+    "detail": "Different claimant names (Andrew Bennett vs John Peterson) on same policy number and vehicle with overlapping damage claims within two months.",
+    "ref": "CLM-0412",
+    "similarity": 0.78
+   }
+  ],
+  "recommended_action": "refer_siu"
+ },
+ "policy": {
+  "policy_number": "COMM-AUTO-001",
+  "policy_name": "Comprehensive Auto Insurance Policy",
+  "coverage_decision": "APPROVED",
+  "applicable_coverage": "Collision (Section 2.1)",
+  "exclusions_triggered": [],
+  "citations": [
+   "Section 2.1: Collision Coverage",
+   "Section 3.1: Standard Limits",
+   "Section 4.1: Standard Deductibles",
+   "Section 5.1 and 5.2: Exclusions checked and none applicable"
+  ]
+ },
+ "letter": "Dear Mr. Peterson,\n\nWe have received your claim for the damage to your 2011 Show Outback, which is generally covered under the collision coverage in Section 2.1 of your Comprehensive Auto Insurance Policy. Our initial review finds the damage you reported is consistent with policy coverage and the estimated repair cost is approximately $5,400. However, an investigation has revealed concerns: a very similar claim was filed on the same vehicle less than two months ago by a different claimant, raising a possibility of insurance fraud.\n\nDue to this, your claim must be referred to our Special Investigations Unit for further review before any payment can be approved. We understand this may be frustrating, but this step ensures that claims are handled fairly and in line with policy terms.\n\nYou will be contacted if additional information or clarification is required. We appreciate your patience.\n\nSincerely,\nClaims Department",
+ "claim": {
+  "policy_number": "COMM-AUTO-001",
+  "policy_holder_name": "John Peterson",
+  "policy_holder_address": "1142 Pinecrest Ave, Springfield, OH 45503",
+  "policy_holder_phone": "(937) 555 2319",
+  "vehicle_year_make_model": "2011 Show Outback",
+  "vehicle_color": "Red",
+  "vehicle_vin": "4S4BRBCC2B3378210",
+  "vehicle_license_plate": "OH-CRV4413",
+  "incident_date": "July 19, 2025",
+  "incident_time": "11:15 AM",
+  "incident_location": "6400 Westbrook Road, Dayton, OH 45415",
+  "weather_conditions": "Clear, dry roads",
+  "incident_description": "While waiting in line with traffic for a stop sign, my vehicle was rear-ended by a blue sedan at moderate speed. The impact pushed my vehicle into the adjacent lane and forced my front end into the left lane's shoulder. The other driver remained at the scene and promptly called local authorities. A police report was filed.",
+  "damage_description": "Severe crumpling and structural damage to the rear bumper and rear quarter panel. Rear driver's side taillight broken and assembly displaced. Rear hatch door bent and misaligned, unable to close properly. Noticeable damage and scraping to the rear fender and left rear wheel well. Suspension may be compromised; rear wheel does not track properly. Hand paint scrapes and destroy along the driver's side. Bumper was damaged, possible interior damage.",
+  "claim_request": null,
+  "police_report_number": "25-22097",
+  "other_party": {
+   "name": null,
+   "insurer": null,
+   "plate": null
+  },
+  "injuries": null,
+  "ocr_quality": "medium",
+  "unreadable_fields": [
+   "claim_request"
+  ]
+ },
+ "seconds": 33.0
+}

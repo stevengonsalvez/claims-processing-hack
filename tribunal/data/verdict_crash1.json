@@ -1,0 +1,105 @@
+{
+ "claim_id": "EVAL-crash1",
+ "decision": "deny",
+ "confidence": 1.0,
+ "rationale": "The claim involves collision damage to the claimant\u2019s own vehicle which is explicitly excluded in the liability-only policy. Fraud risk is low and damage assessment is consistent, but coverage does not apply.",
+ "disagreements": [
+  {
+   "between": "adjuster vs policy analyst",
+   "resolution": "Sided with policy analyst due to explicit exemption in policy text and high confidence."
+  }
+ ],
+ "referral_reason": null,
+ "payout": {
+  "claimed": 5700,
+  "covered": 0,
+  "deductible": 0,
+  "limit": null,
+  "net": 0,
+  "items": [
+   {
+    "part": "front bumper",
+    "action": "replace",
+    "cost": 800
+   },
+   {
+    "part": "driver front quarter panel",
+    "action": "replace",
+    "cost": 1200
+   },
+   {
+    "part": "front driver's side wheel and tire",
+    "action": "replace",
+    "cost": 600
+   },
+   {
+    "part": "driver's door",
+    "action": "repair",
+    "cost": 800
+   },
+   {
+    "part": "headlamp assembly",
+    "action": "replace",
+    "cost": 450
+   },
+   {
+    "part": "front grille",
+    "action": "replace",
+    "cost": 350
+   },
+   {
+    "part": "mechanical components behind bumper",
+    "action": "repair",
+    "cost": 1500
+   }
+  ]
+ },
+ "fraud": {
+  "score": 0.1,
+  "evidence": [],
+  "recommended_action": "proceed"
+ },
+ "policy": {
+  "policy_number": "LIAB-AUTO-001",
+  "policy_name": "Liability Only Auto Insurance Policy",
+  "coverage_decision": "DENIED",
+  "applicable_coverage": "None",
+  "exclusions_triggered": [
+   "Collision damage to your vehicle"
+  ],
+  "citations": [
+   "Section 1: Coverage Overview",
+   "Section 4.1: Your Vehicle",
+   "Section 7.3: Policy Limitations",
+   "Section 3: Coverage Limits"
+  ]
+ },
+ "letter": "Dear Mr. Peterson,\n\nAfter careful review of your claim under policy LIAB-AUTO-001, we have determined that your insurance policy provides liability coverage only and does not cover damage to your own vehicle caused by collision. This is detailed in Section 1 (Coverage Overview), Section 4.1 (Your Vehicle), and Section 7.3 (Policy Limitations) of your policy terms. Although your vehicle sustained substantial damage estimated at $5,700, the policy exclusions apply here, so we must deny your claim. Your reported incident and damages are consistent and fraud risk is low, but unfortunately, coverage for repairs is not available under this policy type.\n\nYou may consider pursuing the responsible driver\u2019s insurer for compensation or other legal remedies. Please contact us if you have questions or need assistance.\n\nSincerely,\nClaims Department",
+ "claim": {
+  "policy_number": "LIAB-AUTO-001",
+  "policy_holder_name": "John Peterson",
+  "policy_holder_address": "1142 Pinecrest Avenue, Springfield, OH 45503",
+  "policy_holder_phone": "(937) 555-2319",
+  "vehicle_year_make_model": "2004 Honda Accord",
+  "vehicle_color": "Silver",
+  "vehicle_vin": "1HGCH56404A123456",
+  "vehicle_license_plate": "OH-GHR1984",
+  "incident_date": "July 17, 2025",
+  "incident_time": "8:30 AM",
+  "incident_location": "Parking Lot, 2325 Main Street, Springfield, OH 45503",
+  "weather_conditions": null,
+  "incident_description": "On the morning of July 17, 2025, my vehicle was legally parked in a market parking space at 2325 Main Street, Springfield. At approximately 8:30 AM, while I was inside a nearby store, I was notified by a witness that a gray pickup truck attempting to park beside my car, struck the front end and driver's side of my vehicle. The other car's driver failed to properly judge the distance and collided with my vehicle, causing significant damage. The other driver left their information and waited for the police to arrive.",
+  "damage_description": "Front bumper dislodged and partially detached; severe denting and scraping on the driver's side front quarter panel; wheel and tire on driver's side front damaged; paint tensifer and deformity on the driver's door; head lamp assembly and grille potentially damaged; possible niden damage to mechanical components behind the bumper",
+  "claim_request": null,
+  "police_report_number": "25-52814",
+  "other_party": {
+   "name": null,
+   "insurer": null,
+   "plate": null
+  },
+  "injuries": null,
+  "ocr_quality": "high",
+  "unreadable_fields": []
+ },
+ "seconds": 42.6
+}

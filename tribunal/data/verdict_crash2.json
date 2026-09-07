@@ -1,0 +1,102 @@
+{
+ "claim_id": "EVAL-crash2",
+ "decision": "approve",
+ "confidence": 0.95,
+ "rationale": "Adjuster and Policy Analyst agree damage is severe and covered under Collision Section 2.1, and Fraud Investigator finds no risk. Evidence is consistent and claim fits policy terms with no exclusions.",
+ "disagreements": [],
+ "referral_reason": null,
+ "payout": {
+  "claimed": 10450,
+  "covered": 10450,
+  "deductible": 500,
+  "limit": 50000,
+  "net": 9950,
+  "items": [
+   {
+    "part": "driver's front door",
+    "action": "replace",
+    "cost": 1200
+   },
+   {
+    "part": "driver's rear door",
+    "action": "replace",
+    "cost": 1100
+   },
+   {
+    "part": "driver's side rear window",
+    "action": "replace",
+    "cost": 350
+   },
+   {
+    "part": "center pillar/frame",
+    "action": "frame repair",
+    "cost": 2500
+   },
+   {
+    "part": "rear wheel and suspension",
+    "action": "repair/alignment",
+    "cost": 1500
+   },
+   {
+    "part": "airbag replacement",
+    "action": "replace",
+    "cost": 2000
+   },
+   {
+    "part": "paint and labor",
+    "action": "repair and repaint",
+    "cost": 1800
+   }
+  ]
+ },
+ "fraud": {
+  "score": 0.0,
+  "evidence": [],
+  "recommended_action": "proceed"
+ },
+ "policy": {
+  "policy_number": "COMP-AUTO-001",
+  "policy_name": "Comprehensive Auto Insurance Policy",
+  "coverage_decision": "APPROVED",
+  "applicable_coverage": "Collision (Section 2.1)",
+  "exclusions_triggered": [],
+  "citations": [
+   "Section 2.1: Collision Coverage - damage from collisions with other vehicles",
+   "Section 3.1: Collision limit $50,000 per incident",
+   "Section 4.1: Collision deductible $500",
+   "Section 5: No exclusions triggered"
+  ]
+ },
+ "letter": "Dear Ms. Turner, we have reviewed your claim regarding the July 15 collision on Madison Avenue covered under your Comprehensive Auto Insurance Policy, specifically Section 2.1 (Collision Coverage). The total estimated repair cost to your 2017 Honda Civic Hatchback is $10,450. Your policy includes a $500 deductible and a coverage limit of $50,000 for collision damage. After careful consideration, your claim is approved. We will process a payment covering repair costs minus your $500 deductible. Please coordinate with your repair shop for work to begin. If you have any questions or further information, feel free to contact us at your earliest convenience. Thank you for your cooperation.",
+ "claim": {
+  "policy_number": "COMP-AUTO-001",
+  "policy_holder_name": "Samantha Turner",
+  "policy_holder_address": "507 Walnut Lane, Albany, NY 12208",
+  "policy_holder_phone": "(518) 555-2913",
+  "vehicle_year_make_model": "2017 Honda Civic Hatchback",
+  "vehicle_color": "Blue - Grey",
+  "vehicle_vin": "19XFC2F5XHE200C87",
+  "vehicle_license_plate": "NY-F2X1452",
+  "incident_date": "July 15, 2025",
+  "incident_time": "4:10 PM",
+  "incident_location": "2100 Madison Avenue, Albany, NY 12208",
+  "weather_conditions": null,
+  "incident_description": "On July 18, 2025, at 4:10 PM, I was driving eastbound on Madison Avenue in Albany, New York. While proceeding through a green light at the intersection with Parkwood Street, another vehicle traveling southbound failed to stop at the red signal and struck my vehicle on the driver's side. My car spun partially as a result of the impact before coming to a stop near the curb. The force of the collision crumpled both the driver's door and rear door, bent the frame at the center pillar, and damaged the rear wheel. The doors can no longer open normally and the rear window on the driver's side is damaged. Emergency services responded to the scene; the other driver admitted fault to the police and their details were recorded.",
+  "damage_description": "Many intrusion and bending on the driver's foot and rear wheel area. 3-pillar area severely compromised; rear wheel misaligned, not functional for safe driving; shattered rear driver's side door; scraping and paint transfer along both driver's side doors and lower panels; deployment of airbags, possible interior damage to armrests and door controls; vehicle towed from accident scene.",
+  "claim_request": null,
+  "police_report_number": "25-13982",
+  "other_party": {
+   "name": null,
+   "insurer": null,
+   "plate": null
+  },
+  "injuries": null,
+  "ocr_quality": "medium",
+  "unreadable_fields": [
+   "claim_request",
+   "weather_conditions",
+   "other_party"
+  ]
+ },
+ "seconds": 40.6
+}

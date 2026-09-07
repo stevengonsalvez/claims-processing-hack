@@ -1,0 +1,99 @@
+{
+ "claim_id": "EVAL-crash3",
+ "decision": "deny",
+ "confidence": 0.95,
+ "rationale": "The policy is liability-only and explicitly excludes collision damage to the insured vehicle, confirmed with high confidence by the Policy Analyst. Fraud risk is very low and the claim is consistent, but coverage does not apply.",
+ "disagreements": [
+  {
+   "between": "adjuster vs policy",
+   "resolution": "Policy analyst\u2019s clear exclusion applies despite adjuster's damage assessment."
+  }
+ ],
+ "referral_reason": null,
+ "payout": {
+  "claimed": 5000,
+  "covered": 0,
+  "deductible": 0,
+  "limit": null,
+  "net": 0,
+  "items": [
+   {
+    "part": "rear driver side quarter panel",
+    "action": "replace",
+    "cost": 1500
+   },
+   {
+    "part": "rear wheel arch",
+    "action": "repair",
+    "cost": 700
+   },
+   {
+    "part": "rear driver side wheel",
+    "action": "replace",
+    "cost": 400
+   },
+   {
+    "part": "front bumper",
+    "action": "replace",
+    "cost": 900
+   },
+   {
+    "part": "front left wheel suspension",
+    "action": "repair",
+    "cost": 1200
+   },
+   {
+    "part": "front left headlight housing",
+    "action": "repair",
+    "cost": 300
+   }
+  ]
+ },
+ "fraud": {
+  "score": 0.0,
+  "evidence": [],
+  "recommended_action": "verify_documents"
+ },
+ "policy": {
+  "policy_number": "LIAB-AUTO-001",
+  "policy_name": "Liability Only Auto Insurance Policy",
+  "coverage_decision": "DENIED",
+  "applicable_coverage": "None",
+  "exclusions_triggered": [
+   "Collision damage to your vehicle"
+  ],
+  "citations": [
+   "Section 1: Coverage Overview",
+   "Section 4.1: Your Vehicle",
+   "Section 3: Coverage Limits"
+  ]
+ },
+ "letter": "Dear Mr. Rodriguez,\n\nThank you for your claim submission regarding your 2012 Suzuki SX4 damage on July 19, 2025. After careful review, we must inform you that your policy number LIAB-AUTO-001 is a liability-only auto insurance policy as defined in Section 1 and Section 4.1. This policy expressly excludes coverage for collision damage to your own vehicle as stated in Section 3 of the policy.\n\nWhile the claim and damage assessment are clear and there is no fraud concern, the policy\u2019s terms mean we cannot approve payment for repairs or replacement. We understand this is disappointing and recommend reviewing your coverage options for comprehensive or collision protection in the future.\n\nIf you have questions or wish to discuss further coverage options, please contact us at your convenience.\n\nSincerely,\nInsurance Claims Department",
+ "claim": {
+  "policy_number": "LIAB-AUTO-001",
+  "policy_holder_name": "Michael Rodriguez",
+  "policy_holder_address": "217 Maplewood Avenue, Harrisburg, PA 17102",
+  "policy_holder_phone": "(717) 555-7745",
+  "vehicle_year_make_model": "2012 Suzuki SX4",
+  "vehicle_color": "White",
+  "vehicle_vin": "JS2YBS131C6109734",
+  "vehicle_license_plate": "PA-KLX2194",
+  "incident_date": "July 19, 2025",
+  "incident_time": "6:30 PM",
+  "incident_location": "400 East 8th Street, Harrisburg, PA 17102",
+  "weather_conditions": "Partly cloudy, roads dry",
+  "incident_description": "On July 19, 2025, at approximately 6:30 PM, I was operating my 2012 Suzuki SX4 eastbound on East 8th Street. As I slowed to make a left turn into a residential driveway, another vehicle traveling at excessive speed attempted to overtake my car on the left and collided forcefully with the rear driver's side quarter panel. The impact caused my car to spin and strike a nearby curb, resulting in further damage to the front bumper and left front wheel. I remained on the scene and called emergency services. The at-fault driver remained present and admitted fault to the responding police officer. The event was witnessed by a neighbor, Mr. Richard Talbot, who has provided a written statement.",
+  "damage_description": "Major dashing and scraping to the rear driver's side quarter panel and bumper; Damage to the rear wheel arch; Front bumper heavily crumpled and partially detached due to secondary curb impact; Defront wheel and suspension support damaged; Minor scraping to front headlight, housing; Vehicle determined not drivable and towed for repair assessment.",
+  "claim_request": null,
+  "police_report_number": "2025-41134",
+  "other_party": {
+   "name": "Richard Talbot",
+   "insurer": null,
+   "plate": null
+  },
+  "injuries": null,
+  "ocr_quality": "high",
+  "unreadable_fields": []
+ },
+ "seconds": 41.0
+}

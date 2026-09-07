@@ -1,0 +1,111 @@
+{
+ "claim_id": "EVAL-crash5",
+ "decision": "refer",
+ "confidence": 0,
+ "rationale": "",
+ "disagreements": [],
+ "referral_reason": null,
+ "payout": {
+  "claimed": 6600,
+  "covered": 0,
+  "deductible": 500,
+  "limit": 50000,
+  "net": 0,
+  "items": [
+   {
+    "part": "left rear quarter panel",
+    "action": "replace",
+    "cost": 1300
+   },
+   {
+    "part": "rear bumper",
+    "action": "replace",
+    "cost": 900
+   },
+   {
+    "part": "left rear taillight",
+    "action": "replace",
+    "cost": 400
+   },
+   {
+    "part": "left rear door",
+    "action": "repair",
+    "cost": 800
+   },
+   {
+    "part": "trunk lid alignment and latch",
+    "action": "repair",
+    "cost": 600
+   },
+   {
+    "part": "left rear wheel",
+    "action": "replace",
+    "cost": 400
+   },
+   {
+    "part": "axle and suspension",
+    "action": "repair",
+    "cost": 1500
+   },
+   {
+    "part": "paint and scrapes",
+    "action": "repair and repaint",
+    "cost": 700
+   }
+  ]
+ },
+ "fraud": {
+  "score": 0.0,
+  "evidence": [],
+  "recommended_action": "proceed"
+ },
+ "policy": {
+  "policy_number": "COMP-AUTO-001",
+  "policy_name": "Comprehensive Auto Insurance",
+  "coverage_decision": "APPROVED",
+  "applicable_coverage": "Collision (Section 2.1)",
+  "exclusions_triggered": [],
+  "citations": [
+   "Section 2.1: Collision Coverage",
+   "Section 3.1: Standard Limits",
+   "Section 4.1: Standard Deductibles",
+   "Section 5.1: General Exclusions",
+   "Section 5.2: Specific Exclusions"
+  ]
+ },
+ "letter": "",
+ "claim": {
+  "policy_number": "COMP-AUTO-001",
+  "policy_holder_name": "Christopher J. Ryan",
+  "policy_holder_address": "238 Willow Crest Drive, Columbus, OH 43214",
+  "policy_holder_phone": "(614) 555-3791",
+  "vehicle_year_make_model": "2016 Toyota Corolla",
+  "vehicle_color": "Black",
+  "vehicle_vin": "2T1BURHE1GC123905",
+  "vehicle_license_plate": "OH-TLY3829",
+  "incident_date": "July 19, 2025",
+  "incident_time": "2:50 PM",
+  "incident_location": "Intersection of Karl Road & Bethel Road, Columbus, OH 43214",
+  "weather_conditions": null,
+  "incident_description": "A gray pickup truck traveling northbound failed to yield while making a left turn and struck the rear driver's side of my vehicle causing extensive damage and spinning the car. The other driver remained at the scene and police were called.",
+  "damage_description": "Severe crumpling and denting of the left rear quarter panel and bumper; rear driver's side taillight shattered; rear door and trunk slightly misaligned; trunk latch affected; rear wheel on the driver's side bent with suspected axle damage; scrapes and paint transfer along the left side; possible under-carriage and suspension issues; vehicle not safe to drive.",
+  "claim_request": null,
+  "police_report_number": "25-33109",
+  "other_party": {
+   "name": null,
+   "insurer": null,
+   "plate": null
+  },
+  "injuries": null,
+  "ocr_quality": "high",
+  "unreadable_fields": [
+   "claim_request",
+   "other_party.name",
+   "other_party.insurer",
+   "other_party.plate",
+   "weather_conditions",
+   "injuries"
+  ]
+ },
+ "seconds": 34.2
+}
