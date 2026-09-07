@@ -13,6 +13,7 @@ import sys
 
 from azure.search.documents.indexes.models import SearchFieldDataType, SimpleField
 
+from .blob_upload import blob_url
 from .search_tools import POLICY_INDEX, PRIOR_INDEX, ensure_index, upload
 from .workflow import REPO
 
@@ -25,6 +26,9 @@ def seed_policies():
     for path in sorted(glob.glob(os.path.join(DATA, "policies", "*.md"))):
         text = open(path).read()
         title = re.search(r"^# (.+)$", text, re.M).group(1)
+        # every policy .md carries "**Policy Code:** <PN>" in its header block
+        code = re.search(r"\*\*Policy Code:\*\*\s*(\S+)", text)
+        policy_number = code.group(1).strip() if code else ""
         # ponytail: chunk on "## Section N" headers, keep the policy title on every chunk
         parts = re.split(r"^(?=## )", text, flags=re.M)
         for i, part in enumerate(parts):
@@ -37,13 +41,17 @@ def seed_policies():
                 "content": part.strip(),
                 "category": "policy",
                 "file_name": os.path.basename(path),
+                "policy_number": policy_number,
+                "source_url": blob_url("policies", os.path.basename(path)),
             })
     ensure_index(POLICY_INDEX, [
         SimpleField(name="category", type=SearchFieldDataType.String, filterable=True),
         SimpleField(name="file_name", type=SearchFieldDataType.String, filterable=True),
+        # exact anchor: search_policies filters on this when the claim carries a policy number
+        SimpleField(name="policy_number", type=SearchFieldDataType.String, filterable=True),
     ])
     upload(POLICY_INDEX, docs)
-    print(f"policies: {len(docs)} chunks -> {POLICY_INDEX}")
+    print(f"policies: {len(docs)} chunks -> {POLICY_INDEX} (policy numbers: {sorted({d['policy_number'] for d in docs})})")
 
 
 NAMES = ["Priya Natarajan", "Tom Whitfield", "Elena Marquez", "Kwame Mensah", "Sofia Lindqvist", "Jamal Carter",
