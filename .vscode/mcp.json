@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "claims-tribunal": {
+      "type": "stdio",
+      "command": "/Users/stevengonsalvez/.agents-in-a-box/worktrees/by-name/claims-processing-hack--ms-hack--b61fe60e/.venv/bin/python",
+      "args": ["-m", "tribunal.mcp_server"],
+      "cwd": "/Users/stevengonsalvez/.agents-in-a-box/worktrees/by-name/claims-processing-hack--ms-hack--b61fe60e",
+      "env": {
+        "TRIBUNAL_API": "http://localhost:8423"
+      }
+    }
+  }
+}
