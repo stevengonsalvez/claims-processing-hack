@@ -1,0 +1,963 @@
+{
+  "generated": "2026-09-07 13:26:15 BST",
+  "claims": [
+    "crash1",
+    "crash2",
+    "crash3",
+    "crash4",
+    "crash5"
+  ],
+  "fields": [
+    "claimant_id",
+    "policy_holder_name",
+    "policy_holder_address",
+    "policy_holder_phone",
+    "policy_holder_email",
+    "policy_number",
+    "vehicle_year_make_model",
+    "vehicle_color",
+    "vehicle_vin",
+    "vehicle_license_plate",
+    "incident_date",
+    "incident_time",
+    "incident_location",
+    "incident_description",
+    "damage_description",
+    "witness_name",
+    "witness_phone",
+    "police_department",
+    "police_report_number",
+    "repair_shop_name",
+    "repair_shop_address",
+    "claim_request",
+    "signature_name",
+    "signature_date"
+  ],
+  "scoring_rule": {
+    "off_page_fields_excluded": [
+      "claimant_id",
+      "repair_shop_name",
+      "repair_shop_address",
+      "claim_request"
+    ],
+    "unscorable_pairs": [
+      [
+        "crash3",
+        "witness_phone"
+      ]
+    ],
+    "scored_pairs": 99,
+    "match": "word-boundary substring, else difflib window >= 0.85"
+  },
+  "prices": {
+    "doc_intelligence": {
+      "meter": "Azure Document Intelligence / S0 Read Pages (tier from 0)",
+      "usd_per_page": 0.0015
+    },
+    "mistral": {
+      "meter": "Azure Mistral Models / OCR 2512 glbl Pages",
+      "usd_per_page": 0.002
+    },
+    "gpt41mini_vision": {
+      "meter": "Azure OpenAI / gpt 4.1 mini Inp glbl + cached Inp glbl + Outp glbl Tokens",
+      "usd_per_input_token": 4.0000000000000003e-07,
+      "usd_per_cached_input_token": 1.0000000000000001e-07,
+      "usd_per_output_token": 1.6000000000000001e-06
+    }
+  },
+  "price_source": "https://prices.azure.com/api/retail/prices, armRegionName=swedencentral",
+  "summary": {
+    "doc_intelligence": {
+      "label": "Azure AI Document Intelligence (prebuilt-read)",
+      "auth": "entra-id",
+      "pages_attempted": 10,
+      "pages_ok": 10,
+      "errors": [],
+      "fields_found": 93,
+      "fields_scored": 99,
+      "field_recall": 0.9394,
+      "fields_off_page": 20,
+      "fields_unscorable": 1,
+      "mean_latency_s": 2.43,
+      "median_latency_s": 2.25,
+      "max_latency_s": 4.01,
+      "max_latency_page": "crash1_front",
+      "mean_wall_latency_s": 2.43,
+      "rate_limit_wait_total_s": 0.0,
+      "total_characters": 8664,
+      "mean_characters_per_page": 866.4,
+      "cost_per_page_usd": 0.0015,
+      "cost_per_claim_usd": 0.003,
+      "cost_per_1000_claims_usd": 3.0,
+      "price_basis": "Azure Document Intelligence / S0 Read Pages (tier from 0)"
+    },
+    "mistral": {
+      "label": "Mistral Document AI (mistral-document-ai-2512)",
+      "auth": "account-key",
+      "pages_attempted": 10,
+      "pages_ok": 10,
+      "errors": [],
+      "fields_found": 92,
+      "fields_scored": 99,
+      "field_recall": 0.9293,
+      "fields_off_page": 20,
+      "fields_unscorable": 1,
+      "mean_latency_s": 2.09,
+      "median_latency_s": 1.28,
+      "max_latency_s": 5.24,
+      "max_latency_page": "crash5_front",
+      "mean_wall_latency_s": 8.09,
+      "rate_limit_wait_total_s": 60.0,
+      "total_characters": 8724,
+      "mean_characters_per_page": 872.4,
+      "cost_per_page_usd": 0.002,
+      "cost_per_claim_usd": 0.004,
+      "cost_per_1000_claims_usd": 4.0,
+      "price_basis": "Azure Mistral Models / OCR 2512 glbl Pages"
+    },
+    "gpt41mini_vision": {
+      "label": "gpt-4.1-mini vision (Responses API)",
+      "auth": "account-key",
+      "pages_attempted": 10,
+      "pages_ok": 10,
+      "errors": [],
+      "fields_found": 93,
+      "fields_scored": 99,
+      "field_recall": 0.9394,
+      "fields_off_page": 20,
+      "fields_unscorable": 1,
+      "mean_latency_s": 6.37,
+      "median_latency_s": 6.49,
+      "max_latency_s": 7.5,
+      "max_latency_page": "crash5_back",
+      "mean_wall_latency_s": 6.37,
+      "rate_limit_wait_total_s": 0.0,
+      "total_characters": 8836,
+      "mean_characters_per_page": 883.6,
+      "cost_per_page_usd": 0.000764,
+      "cost_per_claim_usd": 0.001528,
+      "cost_per_1000_claims_usd": 1.53,
+      "price_basis": "Azure OpenAI / gpt 4.1 mini Inp glbl + cached Inp glbl + Outp glbl Tokens"
+    }
+  },
+  "field_matrix": {
+    "doc_intelligence": {
+      "crash1": {
+        "claimant_id": true,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash2": {
+        "claimant_id": false,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash3": {
+        "claimant_id": false,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": false,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash4": {
+        "claimant_id": true,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash5": {
+        "claimant_id": false,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      }
+    },
+    "mistral": {
+      "crash1": {
+        "claimant_id": true,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash2": {
+        "claimant_id": false,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": false,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash3": {
+        "claimant_id": false,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": false,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash4": {
+        "claimant_id": true,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": false,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": true,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash5": {
+        "claimant_id": false,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": false,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": true,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      }
+    },
+    "gpt41mini_vision": {
+      "crash1": {
+        "claimant_id": true,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash2": {
+        "claimant_id": false,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": false,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": false,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash3": {
+        "claimant_id": false,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": false,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": false,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash4": {
+        "claimant_id": true,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": true,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      },
+      "crash5": {
+        "claimant_id": false,
+        "policy_holder_name": true,
+        "policy_holder_address": true,
+        "policy_holder_phone": true,
+        "policy_holder_email": true,
+        "policy_number": true,
+        "vehicle_year_make_model": true,
+        "vehicle_color": true,
+        "vehicle_vin": true,
+        "vehicle_license_plate": true,
+        "incident_date": true,
+        "incident_time": true,
+        "incident_location": true,
+        "incident_description": true,
+        "damage_description": true,
+        "witness_name": true,
+        "witness_phone": true,
+        "police_department": true,
+        "police_report_number": true,
+        "repair_shop_name": false,
+        "repair_shop_address": false,
+        "claim_request": false,
+        "signature_name": true,
+        "signature_date": true
+      }
+    }
+  },
+  "pages": [
+    {
+      "approach": "doc_intelligence",
+      "claim": "crash1",
+      "side": "front",
+      "latency_s": 4.014,
+      "characters": 1012,
+      "cost_usd": 0.0015,
+      "usage": {
+        "pages": 1
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM\nPolicyholder Information\nName:\nJohn Peterson\nAddress:\n1142 Pinecrest Avenue, Springfield, OH 45503\nPhone:\n(937) 555-2319\nEmail:\njohn.peterson@email.com\nPolicy Number:\nLIAB -AUTO-001\nClaimant ID:\nVehicle Information\nYear/Make/Model:\n2004 Honda Accord\nColor:\nSilver\nVIN:\n1HGCMS6404A123456\nLicense Plate:\nOH - GHR1984\nAccident Information\nDate of Incident:\nJuly 17,2025\nTime:\n8:30 AM\nLocation:\nParking Lot, 2325 Main Street , Springfield,\nOH 45503\nDescription of Incident\nOn the morning of July 17,2025, my vehicle was legally parked in a market parking space at 2325 Main Street, Springfield, At approximately 8:30 AM, while I was inside a nearby Store, I was notified by a witness that a gray pickup truck attempting to park beside my car, struck the front end and driver's side of my vehicle. The other car's driver failed to properly judge the distance and collided with my vehicle, causing significant damage. The other driver left their information and waited for the police to arrive."
+    },
+    {
+      "approach": "doc_intelligence",
+      "claim": "crash1",
+      "side": "back",
+      "latency_s": 2.241,
+      "characters": 599,
+      "cost_usd": 0.0015,
+      "usage": {
+        "pages": 1
+      },
+      "error": "",
+      "text": "Description of Damages\nFront bumper dislodged and partially detached ; severe denting and scraping on the driver's side front quarter panel; wheel and fire on driver's side front damaged; paint transfer and deformity on the driver's door; head lamp assembly and grille potentially damaged; possible hiden damage to mechanical Components behind the bumper\nWitness Information\nName:\nMelissa Grant\nPhone:\n(937) 555-8741\nPolice Report\nReport Number:\n25-52814\nPolice Department:\nSpringfield Police Department\nSignature\nSignature:\nJohn Peterson\nPrinted Name:\nJohn Peterson\nDate:\nJuly 20,2025\nJebiont o noi"
+    },
+    {
+      "approach": "doc_intelligence",
+      "claim": "crash2",
+      "side": "front",
+      "latency_s": 2.3,
+      "characters": 1215,
+      "cost_usd": 0.0015,
+      "usage": {
+        "pages": 1
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM\nPolicyholder Information\nName:\nSamantha Turner\nAddress:\n507 Walnut Lane, Albany, NY 12208\nPhone:\n(518) 555-2913\nEmail:\nsamantha.turner@gmail.com\nPolicy Number:\nCOMM-AUTO-001\nClaimant ID:\nVehicle Information\nYear/Make/Model:\n2017 Honda Civic Hatchback\nColor:\nBlue - Gray\nVIN:\n19XFC2FSXHE200487\nLicense Plate:\nNY - F2X1452\nAccident Information\nDate of Incident:\nJuly 18, 2025\nTime:\n4:10 PM\nLocation:\n2100 Madison Avenue, Albany, NY 12208\nDescription of Incident\nOn July 18, 2025, at 9:10 PM, I was driving eastbound on Madison Avenue in Albany, New York. While proceeding through a green light at the intersection with Parkwood Street, another vehicle traveling southbound failed to stop at the red signal and struck my vehicle hard on the driver's side. My car spun partially as a result of the impact before coming to a stop near the curb. The form of the Collision crumpled both the driver's door and rear door, bant the frame at the center pillar, and damaged the rear wheel. The doors can no longer open normally and the rear window on the driver's side the vehicle. Emergency services responded to the scene; the other driver admitted fault to the police and their details were recorded."
+    },
+    {
+      "approach": "doc_intelligence",
+      "claim": "crash2",
+      "side": "back",
+      "latency_s": 2.202,
+      "characters": 657,
+      "cost_usd": 0.0015,
+      "usage": {
+        "pages": 1
+      },
+      "error": "",
+      "text": "Description of Damages\ntheavy intrusion and bending on the driver's front and rear windows, B-pillar area severely compromised, rear wheel misaligned, not functional for safe driving; shattered rear driver 's side door; scraping and paint transfer along both driver 's side doors and lower panels, deployment of airbags, possible interior damage to armrests and door controls; vehicle towed from accident location.\nWitness Information\nName:\nBrian Hughes\nPhone:\n(518) 555- 9248\nPolice Report\nReport Number:\n25-13982\nPolice Department:\nAlbany Police Department\nSignature\nSignature:\nSamantha Turner\nPrinted Name:\nSamantha Turner\nDate:\nJuly 20, 2025\nnobioul ton"
+    },
+    {
+      "approach": "doc_intelligence",
+      "claim": "crash3",
+      "side": "front",
+      "latency_s": 2.249,
+      "characters": 1221,
+      "cost_usd": 0.0015,
+      "usage": {
+        "pages": 1
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM\nPolicyholder Information\nName:\nMichael Rodr\u00edguez\nAddress:\n217 Maplewood Avenue, Harrisburg, PA 17102\nPhone:\n(717) 555-7745\nEmail:\nmichael.rodriguez@email.com\nPolicy Number:\nLIAB-AUTO-001\nClaimant ID:\nVehicle Information\nYear/Make/Model:\n2012 Suzuki SX4\nColor:\nWhite\nVIN:\nJSZYB5A31C6109734\nLicense Plate:\nPA - KLX2194\nAccident Information\nDate of Incident:\nJuly 19, 2025\nTime\n6:30 PM\nLocation:\n400 East 8th Street, Harrisburg, PA 17102\nWeather Conditions: Partly cloudy, roads dry\nDescription of Incident\nOn July 19, 2025, at approximately 6:30 PM, I was Operating my 2012 Suzuki SX4 eastbound on East 8th Street. As I slowed to make a left turn into a residential driveway, another vehicle traveling at excessive speed attempted to overtake my car on the left and collided forcefully with the rear driver's side quarter panel. The impact caused my car to spin and strike a nearby curb, resulting in further damage to the front bumper and left front wheel, I remained on the scene and called emergency services. The at-fault driver remained present and admitted fault to the responding police officer. The event was witnessed by a neighbor, Mr. Richard Talbot, who has provided a written statement."
+    },
+    {
+      "approach": "doc_intelligence",
+      "claim": "crash3",
+      "side": "back",
+      "latency_s": 2.303,
+      "characters": 678,
+      "cost_usd": 0.0015,
+      "usage": {
+        "pages": 1
+      },
+      "error": "",
+      "text": "Description of Damages\nMajor denting and scraping to the rear driver's side quarter panel and bumper\nDamage to the rear wheel arch Front bumper heavily crumpled and partially detached due to secondary curb impact Left front wheel and suspension suspected damaged\nMinor scraping I not drivable and towed for repair assessment Vehicle determined front left headlight housing\nWitness Information\nName:\nRichard Talbot, 402 East 8th Street, Harrisbourg, PA 17102\nPhone:\n(717) 555-9132\nPolice Report\nReport Number:\n2025-41134\nPolice Department:\nOfficer Dana Meyers, Harrisburg Police\nDepartment\nSignature\nSignature:\nMichael Rodriguez\nPrinted Name:\nMichael Rodriguez\nDate:\nJuly 20,2025"
+    },
+    {
+      "approach": "doc_intelligence",
+      "claim": "crash4",
+      "side": "front",
+      "latency_s": 2.235,
+      "characters": 965,
+      "cost_usd": 0.0015,
+      "usage": {
+        "pages": 1
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM\nPolicyholder Information\nName:\nJohn Peterson\nAddress:\n1142 Pinecrest Avenue, Springfield, OH 45503\nPhone:\n(937) 555 2319\nEmail:\nandreabennett@email.com\nPolicy Number:\nCOMM-AUTO-001\nClaimant ID:\nVehicle Information\nYear/Make/Model:\n2011 Subaru Outback\nColor:\nRed\nVIN:\n454BRBCC2B3378210\nLicense Plate:\nOH - CRV4413\nAccident Information\nDate of Incident:\nJuly 19 ,2025\nTime:\n11:15 AM\nLocation:\n6400 Westbrook Read, Dayton, OH 45415\nWeather Conditions: Clear, dry roads\nDescription of Incident\nOn July 19, 2025, at approximately 11:15 AM, I was driving my 2011 Subaru Outback Westbound on Westbrook Road in Dayton, Ohio While waiting in line with traffic for a stop sign, my vehicle was near-ended by a blue sedan at moderate speed. The impact pushed my vehicle into the adjacent lane and forced my front end into the left love's shoulder. The other driver remained at the scene and promptly called local authorities. A police report was filled."
+    },
+    {
+      "approach": "doc_intelligence",
+      "claim": "crash4",
+      "side": "back",
+      "latency_s": 2.203,
+      "characters": 739,
+      "cost_usd": 0.0015,
+      "usage": {
+        "pages": 1
+      },
+      "error": "",
+      "text": "Description of Damages\nSevere crupopling and structural damage to the rear bumper and rear quanto panel Rear driver's side taillight broken and assembly displaced Rear hatch door best and misaligned, unable to close properly Noticable damage and scraping to the rear fender and left rear wheel well Suspension may be compromised; rear wheel does not track properly Minor paint scrapes and docking along the driver's side Trunk contents disturbed, possible interior damage\nWitness Information\nName:\nTaylor Simmons\nPhone:\n(937) 555-7893\nPolice Report\nReport Number:\n25- 22097\nPolice Department:\nMontgomery County Sheriff's Office\nSignature\nSignature:\nAndrea M. Bennett\nPrinted Name:\nAndrea M. Bennett\nDate:\nJuly 20, 2025\nbrond to fontainhasd"
+    },
+    {
+      "approach": "doc_intelligence",
+      "claim": "crash5",
+      "side": "front",
+      "latency_s": 2.222,
+      "characters": 962,
+      "cost_usd": 0.0015,
+      "usage": {
+        "pages": 1
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM\nPolicyholder Information\nName:\nChristopher J. Ryan\nAddress:\n338 Willow Crest Drive, Columbus, OH 43214\nPhone:\n(614) 555-3791\nEmail:\nchrisjryan@email.com\nPolicy Number:\nCOMM-AUTO-001\nClaimant ID:\nVehicle Information\nYear/Make/Model:\n2016 Toyota Corolla\nColor:\nBlack\nVIN:\n2T1BURME1GC123905\nLicense Plate:\nOH-TLY3829\nAccident Information\nDate of Incident:\nJuly 19, 2025\nTime:\n2:50 PM\nLocation:\nIntersection of Karl Road & Bethel Road,\nColumbus, OH 43214\nDescription of Incident\nOn July 19,2025, I was driving my car eastbound on Beth Road in Columbus, Ohio. At 2:50 PM, as I entered the intersed at karl Road, a gray pickup truck traveling north bound to to yeld while making a left turn and struck the rear drive side of my vehicle. The force of the impact spen my car, causing extensive damage to the left rear panel am bumper. other driver remained at the scene and called local police. Both parties provided statements to law enforcement"
+    },
+    {
+      "approach": "doc_intelligence",
+      "claim": "crash5",
+      "side": "back",
+      "latency_s": 2.336,
+      "characters": 616,
+      "cost_usd": 0.0015,
+      "usage": {
+        "pages": 1
+      },
+      "error": "",
+      "text": "Description of Damages\nSevere crumpling and denting of the left rear quarter panel and bumper; rear driver's side taillight shattered; rear door and truck slightly misaligned; trunk latch affected, rear wheel on the driver's side bent, suspected axle damage; scrapes and paint transfer along the left side; possible under- carriage and suspension issues; vehicle not safe to drie.\nWitness Information\nName:\nSamuel Lewis\nPhone:\n(614) 555-7362\nPolice Report\nReport Number:\n25- 33109\nPolice Department:\nColumbus Police Department\nSignature\nSignature:\nChristopholyan\nPrinted Name:\nChristopher J. Ryan\nDate:\nJuly 20, 2025"
+    },
+    {
+      "approach": "mistral",
+      "claim": "crash1",
+      "side": "front",
+      "latency_s": 4.725,
+      "characters": 1032,
+      "cost_usd": 0.002,
+      "usage": {
+        "pages": 1,
+        "rate_limit_wait_s": 0.0
+      },
+      "error": "",
+      "text": "# ACCIDENT STATEMENT FORM\n\n## Policyholder Information\n\nName: John Peterson\nAddress: 1142 Pinecrest Avenue, Springfield, OH 45503\nPhone: (937) 555-2319\nEmail: john.peterson@email.com\nPolicy Number: LIAB-AUTO-001\nClaimant ID:\n\n## Vehicle Information\n\nYear/Make/Model: 2004 Honda Accord\nColor: Silver\nVIN: 1HGCH56404A123456\nLicense Plate: OH-GHR1984\n\n## Accident Information\n\nDate of Incident: July 17, 2025\nTime: 8:30 AM\nLocation: Parking Lot, 2325 Main Street, Springfield, OH 45503\n\n## Description of Incident\n\nOn the morning of July 17, 2025, my vehicle was legally parked in a market parking space at 2325 Main Street, Springfield. At approximately 8:30 AM, while I was inside a nearby store, I was notified by a witness that a gray pickup truck attempting to park beside my car, struck the front end and driver's side of my vehicle. The other car's driver failed to properly judge the distance and collided with my vehicle, causing significant damage. The other driver left their information and waited for the police to arrive."
+    },
+    {
+      "approach": "mistral",
+      "claim": "crash1",
+      "side": "back",
+      "latency_s": 0.954,
+      "characters": 588,
+      "cost_usd": 0.002,
+      "usage": {
+        "pages": 1,
+        "rate_limit_wait_s": 0.0
+      },
+      "error": "",
+      "text": "Description of Damages\nFront bumper dislodged and partially detached; severe denting and scraping on the driver's side front quarter panel; wheel and tire on driver's side front damaged; paint tensifer and deformity on the driver's door; head lamp assembly and grille potentially damaged; possible niden damage to mechanical components behind the bumper\n\nWitness Information\nName: Melissa Grant\nPhone: (937) 555-8741\n\nPolice Report\nReport Number: 25-52814\nPolice Department: Springfield Police Department\n\nSignature\nSignature: John Peterson\nPrinted Name: John Peterson\nDate: July 20, 2025"
+    },
+    {
+      "approach": "mistral",
+      "claim": "crash2",
+      "side": "front",
+      "latency_s": 1.265,
+      "characters": 1217,
+      "cost_usd": 0.002,
+      "usage": {
+        "pages": 1,
+        "rate_limit_wait_s": 0.0
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM\n\nPolicyholder Information\nName: Samantha Turner\nAddress: 507 Walnut Lane, Albany, NY 12208\nPhone: (518) 555-2913\nEmail: samantha.turner@email.com\nPolicy Number: C044-AUTO-001\nClaimant ID:\n\nVehicle Information\nYear/Make/Model: 2017 Honda Cmc Hatchback\nColor: Blue - Grey\nVIN: 19XFC2F5XHE200C87\nLicense Plate: NY-F2X1452\n\nAccident Information\nDate of Incident: July 15, 2025\nTime: 4:10 PM\nLocation: 2100 Madison Avenue, Albany, NY 12208\n\nDescription of Incident\nOn July 18, 2025, at 4:10 PM, 1 wear driving eastbound on Madison Avenue in Albany, New York. While proceeding through a green light at the intersection with Parkwood Street, another vehicle traveling southbound failed to stop at the red signal and struck my vehicle hand on the driver's side. My car spun partially as a result of the impact before coming to a stop near the curb. The force of the collision crumpled both the driver's door and rear door, bent the frame at the center pillar, and damaged the rear wheel. The doors can no longer open normally and the rear window on the driver's side the vehicle. Emergency services responded to the scene; the other driver admitted fault to the police and their details were recorded."
+    },
+    {
+      "approach": "mistral",
+      "claim": "crash2",
+      "side": "back",
+      "latency_s": 0.965,
+      "characters": 636,
+      "cost_usd": 0.002,
+      "usage": {
+        "pages": 1,
+        "rate_limit_wait_s": 0.0
+      },
+      "error": "",
+      "text": "Description of Damages\nMany intrusion and bending on the driver's foot and rear wielow. 3-plier area severely compromised; rear wheel misaligned, not functional for safe driving; shattered rear driver's side door; scraping and paint transfer along both driver's side doors and lower panels; deployment of airbags, possible utero damage to armrests and door controls; vehicle towed from accident weakers.\n\nWitness Information\nName: Brian Hughes\nPhone: (518) 555-9248\n\nPolice Report\nReport Number: 25-13982\nPolice Department: Albany Police Department\n\nSignature\nSignature: Samantha Turner\nPrinted Name: Samantha Turner\nDate: July 20, 2025"
+    },
+    {
+      "approach": "mistral",
+      "claim": "crash3",
+      "side": "front",
+      "latency_s": 1.289,
+      "characters": 1242,
+      "cost_usd": 0.002,
+      "usage": {
+        "pages": 1,
+        "rate_limit_wait_s": 0.0
+      },
+      "error": "",
+      "text": "# ACCIDENT STATEMENT FORM\n\n## Policyholder Information\n\nName: Michael Rodriguez\nAddress: 217 Maplewood Avenue, Harrisburg, PA 17102\nPhone: (717) 555-7745\nEmail: michael.rodriguez@email.com\nPolicy Number: LIAB-AUTO-001\nClaimant ID:\n\n## Vehicle Information\n\nYear/Make/Model: 2012 Suzuki SX4\nColor: White\nVIN: JS2YB5A31C6109734\nLicense Plate: PA-KLX2194\n\n## Accident Information\n\nDate of Incident: July 19, 2025\nTime: 6:30 PM\nLocation: 400 East 8th Street, Harrisburg, PA 17102\nWeather Conditions: Partly cloudy, roads dry\n\n## Description of Incident\n\nOn July 19, 2025, at approximately 6:30 PM, I was operating my 2012 Suzuki SX4 eastbound on East 8th Street. As I slowed to make a left turn into a residential driveway, another vehicle traveling at excessive speed attempted to overtake my car on the left and collided forcefully with the rear driver's side quarter panel. The impact caused my car to spin and strike a nearby curb, resulting in further damage to the front bumper and left front wheel. I remained on the scene and called emergency services. The at-fault driver remained present and admitted fault to the responding police officer. The event was witnessed by a neighbor, Mr. Richard Talbot, who has provided a written statement."
+    },
+    {
+      "approach": "mistral",
+      "claim": "crash3",
+      "side": "back",
+      "latency_s": 1.201,
+      "characters": 682,
+      "cost_usd": 0.002,
+      "usage": {
+        "pages": 1,
+        "rate_limit_wait_s": 0.0
+      },
+      "error": "",
+      "text": "Description of Damages\nMajor dashing and scraping to the rear driver's side\nquarter panel and bumper\nDamage to the rear wheel arch\nFort bumper heavily crumpled and partially detached due to secondary curbs impact\ndeft fort wheel and suspension supported damaged\nminor scraping to front deft handlight, housing\nVessels determined not drivable and towed for repair assessment\n\nWitness Information\nName: Richard Talbot, 402 East 8th Street, Harrisburg, PA 17102\nPhone: (717) 555-9132\n\nPolice Report\nReport Number: 2025-41134\nPolice Department: Officer Dana Meyers, Harrisburg Police Department\n\nSignature\nSignature: Michael Rodriguez\nPrinted Name: Michael Rodriguez\nDate: July 20, 2025"
+    },
+    {
+      "approach": "mistral",
+      "claim": "crash4",
+      "side": "front",
+      "latency_s": 32.541,
+      "characters": 978,
+      "cost_usd": 0.002,
+      "usage": {
+        "pages": 1,
+        "rate_limit_wait_s": 30.0
+      },
+      "error": "",
+      "text": "# ACCIDENT STATEMENT FORM\n\n## Policyholder Information\n\nName: John Peterson\nAddress: 1142 Pinecrest Ave, Springfield, OH 45503\nPhone: (937) 555 2319\nEmail: andreatennett@email.com\nPolicy Number: COMM-AUTO-001\nClaimant ID:\n\n## Vehicle Information\n\nYear/Make/Model: 2011 Show Outback\nColor: Red\nVIN: 4S4BRBCC2B3378210\nLicense Plate: OH-CRV4413\n\n## Accident Information\n\nDate of Incident: July 19, 2025\nTime: 11:15 AM\nLocation: 6400 Westbrook Road, Dayton, OH 45415\nWeather Conditions: Clear, dry roads\n\n## Description of Incident\n\nOn July 19, 2025, at approximately 11:15 AM, I was driving my 2011 Show Outback westbound on Westbrook Road in Dayton, Ohio. While waiting in line with traffic for a stop sign, my vehicle was rear-ended by a blue sedan at moderate speed. The impact pushed my vehicle into the adjacent lane and forced my front end into the left lane's shoulder. The other driver remained at the scene and promptly called local authorities. A police report was filed."
+    },
+    {
+      "approach": "mistral",
+      "claim": "crash4",
+      "side": "back",
+      "latency_s": 1.012,
+      "characters": 713,
+      "cost_usd": 0.002,
+      "usage": {
+        "pages": 1,
+        "rate_limit_wait_s": 0.0
+      },
+      "error": "",
+      "text": "Description of Damages\nSevere crumpling and structural damage to the rear burger and rear quote panel\nRear driver's side twilight broken and assembly displaced\nRear hatch door bent and misaligned, unable to close properly\nNoticable damage and scraping to the rear fender and left rear wheel wall\nSuspension may be compensated; rear wheel does not track properly\nHand paint scrapes and destroy along the driver's side\nBurglar wants damaged, possible interior damage\n\nWitness Information\nName: Taylor Simmons\nPhone: (937) 555-7893\n\nPolice Report\nReport Number: 25-22097\nPolice Department: Montgomery County Sheriff's Office\n\nSignature\nSignature: Andrew M. Bennett\nPrinted Name: Andrew M. Bennett\nDate: July 20, 2015"
+    },
+    {
+      "approach": "mistral",
+      "claim": "crash5",
+      "side": "front",
+      "latency_s": 35.24,
+      "characters": 1004,
+      "cost_usd": 0.002,
+      "usage": {
+        "pages": 1,
+        "rate_limit_wait_s": 30.0
+      },
+      "error": "",
+      "text": "# ACCIDENT STATEMENT FORM\n\n## Policyholder Information\n\nName: Christopher J. Ryan\nAddress: 238 Willow Crest Drive, Columbus, OH 43214\nPhone: (614) 555-3791\nEmail: chrisjryan@email.com\nPolicy Number: COH14-AUTO-001\nClaimant ID:\n\n## Vehicle Information\n\nYear/Make/Model: 2016 Toyota Corolla\nColor: Black\nVIN: 2T1BURHE1GC123905\nLicense Plate: OH-TLY3829\n\n## Accident Information\n\nDate of Incident: July 19, 2025\nTime: 2:50 PM\nLocation: Intersection of Karl Road &amp; Bethel Road, Columbus, OH 43214\n\n## Description of Incident\n\nOn July 19, 2025, I was driving my car eastbound on Bethel Road in Columbus, Ohio. At 2:50 PM, as I entered the intersection at Karl Road, a gray pickup truck traveling northbound for me to yield while making a left turn and struck the rear drive side of my vehicle. The force of the impact spun my car, causing extensive damage to the left rear panel am bumper. The other driver remained at the scene and called local police. Both parties provided statements to law enforcement"
+    },
+    {
+      "approach": "mistral",
+      "claim": "crash5",
+      "side": "back",
+      "latency_s": 1.714,
+      "characters": 632,
+      "cost_usd": 0.002,
+      "usage": {
+        "pages": 1,
+        "rate_limit_wait_s": 0.0
+      },
+      "error": "",
+      "text": "# Description of Damages\n\nSevere crumpling and denting of the left rear quarter panel and bumper; rear driver's side taillight shattered; rear door and trunk slightly misaligned; trunk latch affected; rear wheel on the driver's side bent, suspected axle damage; scrapes and paint transfer along the left side; possible under-carriage and suspension issues; vehicle not safe to drive.\n\n# Witness Information\n\nName: Samuel Lewis\n\nPhone: (614) 555-7362\n\n# Police Report\n\nReport Number: 25-33109\n\nPolice Department: Columbus Police Department\n\n# Signature\n\nSignature: Carolyn Ryan\n\nPrinted Name: Christopher J. Ryan\n\nDate: July 20, 2025"
+    },
+    {
+      "approach": "gpt41mini_vision",
+      "claim": "crash1",
+      "side": "front",
+      "latency_s": 7.429,
+      "characters": 1018,
+      "cost_usd": 0.0008132,
+      "usage": {
+        "input_tokens": 1737,
+        "cached_input_tokens": 1024,
+        "output_tokens": 266
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM\nPolicyholder Information\nName: John Peterson\nAddress: 1142 Pinecrest Avenue, Springfield, OH 45503\nPhone: (937) 555 - 2319\nEmail: john.peterson@email.com\nPolicy Number: LIAB - AUTO - 001\nClaimant ID: \nVehicle Information\nYear/Make/Model: 2004 Honda Accord\nColor: Silver\nVIN: 1HGCM56404A123456\nLicense Plate: OH - GHR1984\nAccident Information\nDate of Incident: July 17, 2025\nTime: 8:30 AM\nLocation: Parking Lot 12325 Main Street, Springfield,\nOH 45503\nDescription of Incident\nOn the morning of July 17, 2025, my vehicle was legally parked in a market parking space at 2325 Main Street, Springfield. At approximately 8:30 AM, while I was inside a nearby store, I was noticed by a witness that a gray pickup truck attempting to park beside my car, struck the front end and driver\u2019s side of my vehicle. The other car\u2019s driver failed to properly judge the distance and collided with my vehicle, causing significant damage.\nThe other driver left their information and waited for the police to arrive."
+    },
+    {
+      "approach": "gpt41mini_vision",
+      "claim": "crash1",
+      "side": "back",
+      "latency_s": 4.396,
+      "characters": 586,
+      "cost_usd": 0.0005876,
+      "usage": {
+        "input_tokens": 1737,
+        "cached_input_tokens": 1024,
+        "output_tokens": 125
+      },
+      "error": "",
+      "text": "Description of Damages\nFront bumper dislodged and partially detached; severe denting and scraping on the driver's side front quarter panel; wheel and tire on driver's side front damaged; paint transfer and deformity on the driver's door; head lamp assembly and grille potentially damaged; possible hidden damage to mechanical components behind the bumper\nWitness Information\nName: Melissa Grant\nPhone: (937) 555-8741\nPolice Report\nReport Number: 25-52814\nPolice Department: Springfield Police Department\nSignature\nSignature: John Peterson\nPrinted Name: John Peterson\nDate: July 20, 2025"
+    },
+    {
+      "approach": "gpt41mini_vision",
+      "claim": "crash2",
+      "side": "front",
+      "latency_s": 7.331,
+      "characters": 1224,
+      "cost_usd": 0.0009108,
+      "usage": {
+        "input_tokens": 1737,
+        "cached_input_tokens": 1024,
+        "output_tokens": 327
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM\nPolicyholder Information\nName: Samantha Turner\nAddress: 507 Walnut Lane, Albany, NY 12208\nPhone: (518) 555-2913\nEmail: samantha.turner@email.com\nPolicy Number: COM4 - AUTO - 007\nClaimant ID: \nVehicle Information\nYear/Make/Model: 2017 Honda Civic Hatchback\nColor: Blue - Gray\nVIN: 19XFC2F5XHE200687\nLicense Plate: NY - P2X 1452\nAccident Information\nDate of Incident: July 18, 2025\nTime: 4:10 PM\nLocation: 2100 Madison Avenue, Albany, NY 12208\nDescription of Incident\nOn July 18, 2025, at 4:10 PM, I was driving eastbound on Madison\nAvenue in Albany, New York. While proceeding through a green light\nat the intersection with Parkwood Street, another vehicle traveling southwest\nfailed to stop at the red signal and struck my vehicle hard\non the driver\u2019s side. My car spun partially as a result of the\nimpact before coming to a stop near the curb. The force of the\ncollision crumpled both the driver\u2019s door and rear door, bent the\nframe at the center pillar, and damaged the rear wheel. The doors\ncan no longer open normally and the rear window on the driver\u2019s side\nof the vehicle. Emergency services responded to the scene; the other driver\nadmitted fault to the police and their details were recorded."
+    },
+    {
+      "approach": "gpt41mini_vision",
+      "claim": "crash2",
+      "side": "back",
+      "latency_s": 5.294,
+      "characters": 642,
+      "cost_usd": 0.0006068,
+      "usage": {
+        "input_tokens": 1737,
+        "cached_input_tokens": 1024,
+        "output_tokens": 137
+      },
+      "error": "",
+      "text": "Description of Damages\nHeavy intrusion and bending on the driver's front and rear windows; B-pillar area severely compromised; rear wheel misaligned, not functional for safe driving; shattered rear driver's side door; scraping and paint transfer along both driver's side doors and lower panels; deployment of airbags; possible interior damage to armrest and door controls; vehicle towed from accident location.\nWitness Information\nName: Brian Hughes\nPhone: (518) 555 - 9248\nPolice Report\nReport Number: 25-13982\nPolice Department: Albany Police Department\nSignature\nSignature: Samantha Turner\nPrinted Name: Samantha Turner\nDate: July 20, 2025"
+    },
+    {
+      "approach": "gpt41mini_vision",
+      "claim": "crash3",
+      "side": "front",
+      "latency_s": 6.142,
+      "characters": 1261,
+      "cost_usd": 0.000898,
+      "usage": {
+        "input_tokens": 1737,
+        "cached_input_tokens": 1024,
+        "output_tokens": 319
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM  \nPolicyholder Information  \nName: Michael Rodriguez  \nAddress: 217 Maplewood Avenue, Harrisburg, PA 17102  \nPhone: (717) 555-7745  \nEmail: michael.rodriguez@email.com  \nPolicy Number: LIAB-AUTO-001  \nClaimant ID:  \nVehicle Information  \nYear/Make/Model: 2012 Suzuki SX4  \nColor: White  \nVIN: JS2YB5A31C6109734  \nLicense Plate: PA - KLX 2194  \nAccident Information  \nDate of Incident: July 19, 2025  \nTime: 6:30 PM  \nLocation: 400 East 8th Street, Harrisburg, PA 17102  \nWeather Conditions: Partly cloudy, roads dry  \nDescription of Incident  \nOn July 19, 2025, at approximately 6:30 PM, I was operating my 2012 Suzuki SX4 eastbound on East 8th Street. As I slowed to make a left turn into a residential driveway, another vehicle traveling at excessive speed attempted to overtake my car on the left and collided forcefully with the rear driver\u2019s side quarter panel. The impact caused my car to spin and strike a nearby curb, resulting in further damage to the front bumper and left front wheel. I remained on the scene and called emergency services. The at-fault driver remained present and admitted fault to the responding police officer. The event was witnessed by a neighbor, Mr. Richard Talbot, who has provided a written statement."
+    },
+    {
+      "approach": "gpt41mini_vision",
+      "claim": "crash3",
+      "side": "back",
+      "latency_s": 6.606,
+      "characters": 720,
+      "cost_usd": 0.0006436,
+      "usage": {
+        "input_tokens": 1737,
+        "cached_input_tokens": 1024,
+        "output_tokens": 160
+      },
+      "error": "",
+      "text": "Description of Damages  \nMajor denting and scraping to the rear driver's side quarter panel and bumper  \nDamage to the rear wheel arch  \nFront bumper heavily crumpled and partially detached due to secondary curb impact  \nDeaf [sic] front wheel and suspension suspected damaged  \nMinor scraping to front left headlight housing  \nVehicle determined not drivable and towed for repair assessment  \n\nWitness Information  \nName: Richard Talbot, 402 East 8th Street, Harrisburg, PA 17102  \nPhone: (717) 555-9132  \n\nPolice Report  \nReport Number: 2025-41134  \nPolice Department: Officer Dana Meyers, Harrisburg Police Department  \n\nSignature  \nSignature: Michael Rodriguez  \nPrinted Name: Michael Rodriguez  \nDate: July 20, 2025"
+    },
+    {
+      "approach": "gpt41mini_vision",
+      "claim": "crash4",
+      "side": "front",
+      "latency_s": 6.377,
+      "characters": 1003,
+      "cost_usd": 0.0008084,
+      "usage": {
+        "input_tokens": 1737,
+        "cached_input_tokens": 1024,
+        "output_tokens": 263
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM\n\nPolicyholder Information  \nName: John Peterson  \nAddress: 1142 Pinecrest Avenue, Springfield, OH 45503  \nPhone: (937) 555 2319  \nEmail: andreabennett@email.com  \nPolicy Number: COMM-AUTO-001  \nClaimant ID:  \n\nVehicle Information  \nYear/Make/Model: 2011 Subaru Outback  \nColor: Red  \nVIN: 4S4BRBCCAB3378210  \nLicense Plate: OH-CRV4413  \n\nAccident Information  \nDate of Incident: July 19, 2025  \nTime: 11:15 AM  \nLocation: 6400 Westbrook Road, Dayton, OH 45415  \nWeather Conditions: Clear, dry roads  \n\nDescription of Incident  \nOn July 19, 2025, at approximately 11:15 AM, I was driving my 2011 Subaru Outback westbound on Westbrook Road in Dayton, Ohio. While waiting in line with traffic for a stop sign, my vehicle was rear-ended by a blue sedan at moderate speed. The impact pushed my vehicle into the adjacent lane and forced my front end into the left lane's shoulder. The other driver remained at the scene and promptly called local authorities. A police report was filed."
+    },
+    {
+      "approach": "gpt41mini_vision",
+      "claim": "crash4",
+      "side": "back",
+      "latency_s": 5.82,
+      "characters": 726,
+      "cost_usd": 0.0009588,
+      "usage": {
+        "input_tokens": 1737,
+        "cached_input_tokens": 0,
+        "output_tokens": 165
+      },
+      "error": "",
+      "text": "Description of Damages\nSevere crumpling and structural damage to the rear bumper and rear quarter panel\nRear driver's side taillight broken and assembly displaced\nRear hatch door bent and misaligned, unable to close properly\nNoticeable damage and scraping to the rear fender and left rear wheel well\nSuspension may be compromised: rear wheel does not track properly\n[Illegible paint scrapes and dings along the driver's side]\nTrim contents disturbed, possible interior damage\n\nWitness Information\nName: Taylor Simmons\nPhone: (937) 555 - 7833\n\nPolice Report\nReport Number: 25-22097\nPolice Department: Montgomery County Sheriff's Office\n\nSignature\nSignature: Andrea M. Bennett\nPrinted Name: Andrea M. Bennett\nDate: July 20, 2025"
+    },
+    {
+      "approach": "gpt41mini_vision",
+      "claim": "crash5",
+      "side": "front",
+      "latency_s": 6.812,
+      "characters": 1016,
+      "cost_usd": 0.0008052,
+      "usage": {
+        "input_tokens": 1737,
+        "cached_input_tokens": 1024,
+        "output_tokens": 261
+      },
+      "error": "",
+      "text": "ACCIDENT STATEMENT FORM  \nPolicyholder Information  \nName: Christopher J. Ryan  \nAddress: 838 Willow Crest Drive, Columbus, OH 43214  \nPhone: (614) 555-3791  \nEmail: chrisjryan@email.com  \nPolicy Number: COMM-AUTO-001  \nClaimant ID:  \nVehicle Information  \nYear/Make/Model: 2016 Toyota Corolla  \nColor: Black  \nVIN: 2T1BURHE1GC123905  \nLicense Plate: OH-TLY3829  \nAccident Information  \nDate of Incident: July 19, 2025  \nTime: 2:50 PM  \nLocation: Intersection of Karl Road & Bethel Road, Columbus, OH 43214  \nDescription of Incident  \nOn July 19, 2025, I was driving my car eastbound on Bethel Road in Columbus, Ohio. At 2:50 PM, as I entered the intersection at Karl Road, a gray pickup truck traveling northbound failed to yield while making a left turn and struck the rear drive side of my vehicle. The force of the impact spun my car causing extensive damage to the left rear panel and bumper. The other driver remained at the scene and called local police.  \nBoth parties provided statements to law enforcement."
+    },
+    {
+      "approach": "gpt41mini_vision",
+      "claim": "crash5",
+      "side": "back",
+      "latency_s": 7.504,
+      "characters": 640,
+      "cost_usd": 0.00061,
+      "usage": {
+        "input_tokens": 1737,
+        "cached_input_tokens": 1024,
+        "output_tokens": 139
+      },
+      "error": "",
+      "text": "Description of Damages  \nSevere crumpling and denting of the left rear quarter panel and bumper; rear driver's side taillight shattered; rear door and trunk slightly misaligned; trunk latch affected; rear wheel on the driver's side bent, suspected axle damage; scraper and paint transfer along the left side; possible under carriage and suspension issues; vehicle not safe to drive.\n\nWitness Information  \nName: Samuel Lewis  \nPhone: (614) 555-7362  \n\nPolice Report  \nReport Number: 25-33109  \nPolice Department: Columbus Police Department  \n\nSignature  \nSignature: Christopher Ryan  \nPrinted Name: Christopher J. Ryan  \nDate: July 20, 2025"
+    }
+  ]
+}
