@@ -16,7 +16,7 @@ GT = json.load(open(os.path.join(REPO, "challenge-6", "coverage_ground_truth.jso
 DATA_DIR = os.environ.get("TRIBUNAL_DATA_DIR", os.path.join(os.path.dirname(__file__), "data"))
 os.makedirs(DATA_DIR, exist_ok=True)
 OUT = os.path.join(DATA_DIR, "scorecard.md")
-MODEL = os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini")
+MODEL = os.environ.get("TRIBUNAL_AGENT_MODEL") or os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini")
 TRIBUNAL_TO_GT = {"approve": "APPROVED", "deny": "DENIED", "refer": "REFER"}
 
 

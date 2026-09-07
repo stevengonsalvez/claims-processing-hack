@@ -16,7 +16,8 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 ENDPOINT = os.environ.get("AI_FOUNDRY_PROJECT_ENDPOINT", "")
-MODEL = os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini")
+# TRIBUNAL_AGENT_MODEL wins over .env (load_dotenv(override=True) would clobber MODEL_DEPLOYMENT_NAME from the shell)
+MODEL = os.environ.get("TRIBUNAL_AGENT_MODEL") or os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini")
 
 _project: AIProjectClient | None = None
 _openai = None

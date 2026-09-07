@@ -76,7 +76,7 @@ def main():
         print(row)
 
     keys = ["groundedness", "relevance", "coherence", "fluency"] + (["safety"] if safety else [])
-    lines = [f"# Verdict quality (azure-ai-evaluation, judge {os.environ.get('TRIBUNAL_JUDGE_MODEL', 'gpt-4.1-mini')}, agents on {os.environ.get('MODEL_DEPLOYMENT_NAME', 'gpt-4.1-mini')}, 1-5)", "",
+    lines = [f"# Verdict quality (azure-ai-evaluation, judge {os.environ.get('TRIBUNAL_JUDGE_MODEL', 'gpt-4.1-mini')}, agents on {os.environ.get('TRIBUNAL_AGENT_MODEL') or os.environ.get('MODEL_DEPLOYMENT_NAME', 'gpt-4.1-mini')}, 1-5)", "",
              "| claim | decision | " + " | ".join(keys) + " |", "|---|---|" + "---|" * len(keys)]
     for r in rows:
         lines.append(f"| {r['claim']} | {r['decision']} | " + " | ".join(str(r.get(k)) for k in keys) + " |")

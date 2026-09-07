@@ -149,7 +149,7 @@ def write_report(result: dict, name: str, rows: int, upload_error: str | None,
     studio_url = result.get("studio_url")
     lines = [
         "# Cloud evaluation (azure-ai-evaluation `evaluate`, logged to the Foundry project)", "",
-        f"Run `{name}` - {rows} verdicts, judge `{os.environ.get('TRIBUNAL_JUDGE_MODEL', 'gpt-4.1-mini')}`, agents on `{os.environ.get('MODEL_DEPLOYMENT_NAME', 'gpt-4.1-mini')}`, "
+        f"Run `{name}` - {rows} verdicts, judge `{os.environ.get('TRIBUNAL_JUDGE_MODEL', 'gpt-4.1-mini')}`, agents on `{os.environ.get('TRIBUNAL_AGENT_MODEL') or os.environ.get('MODEL_DEPLOYMENT_NAME', 'gpt-4.1-mini')}`, "
         f"generated {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}.", "",
     ]
     if studio_url:
@@ -212,7 +212,7 @@ def main() -> int:
 
     name = f"tribunal-verdicts-{TAG + '-' if TAG else ''}{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
     kwargs = dict(data=DATASET, evaluators=evaluators(), evaluation_name=name,
-                  output_path=RESULT, tags={"component": "claims-tribunal", "stage": "pre-production", "agent_model": os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini")})
+                  output_path=RESULT, tags={"component": "claims-tribunal", "stage": "pre-production", "agent_model": os.environ.get("TRIBUNAL_AGENT_MODEL") or os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini")})
     upload_error = None
     if args.local or not PROJECT:
         result = evaluate(**kwargs)
