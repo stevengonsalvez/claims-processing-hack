@@ -96,7 +96,8 @@ const last = (evs, name) => evs.filter(e => e.event === name).at(-1)?.data;
     },
     case_file: { decisions: caseAfter.decisions.length, appeals: caseAfter.appeals.length },
     checks: {
-      precedent_cited: (evidence.precedents || []).length > 0,
+      // the precedent is written by this run's /decision, so it can only be cited by the appeal session that follows
+      precedent_cited: JSON.stringify(appeal).includes(dec.precedent_id || 'PREC-'),
       recycled_photo_detected: recycled.length > 0,
       verdict_has_clauses: (verdict.clauses || []).length > 0,
       what_if_present: Boolean(verdict.what_if),
