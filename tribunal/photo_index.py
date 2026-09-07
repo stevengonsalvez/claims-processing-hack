@@ -81,15 +81,13 @@ async def match_photo(photo_path: str, top: int = 3, exclude_claim: str | None =
 async def seed() -> None:
     ensure()
     images = sorted(glob.glob(os.path.join(REPO, "challenge-0", "data", "images", "crash*.jpg")))
-    # Historic photos: the synthetic prior claims CLM-0001..0005 each "filed" one of the demo photos, except crash4,
-    # which is planted under CLM-0412 (the paid duplicate the fraud agent already knows about).
-    plan = []
-    for i, p in enumerate(images, 1):
-        name = os.path.basename(p)
-        if name == "crash4.jpg":
-            plan.append(("CLM-0412", p, "2025-05-14"))
-        else:
-            plan.append((f"CLM-{i:04d}", p, f"2025-0{i}-1{i}"))
+    # Only the planted duplicate is on file: crash4.jpg under CLM-0412 (the paid claim the fraud agent already
+    # knows). Indexing the other demo photos would make every sample claim match its own photo.
+    client = SearchClient(SEARCH_ENDPOINT, PHOTO_INDEX, _cred)
+    stale = [{"id": r["id"]} for r in client.search(search_text="*", select=["id"], top=1000)]
+    if stale:
+        client.delete_documents(stale)
+    plan = [("CLM-0412", p, "2025-05-14") for p in images if os.path.basename(p) == "crash4.jpg"]
     docs = await asyncio.gather(*[index_photo(c, p, d) for c, p, d in plan])
     for d in docs:
         print(f"indexed {d['id']}: {d['content'][:80]}...")

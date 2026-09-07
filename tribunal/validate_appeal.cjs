@@ -52,8 +52,8 @@ const last = (evs, name) => evs.filter(e => e.event === name).at(-1)?.data;
   const claimId = verdict.claim_id;
   log(`v1 ${verdict.decision} for ${claimId} in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
-  const recycled = (evidence.photo_matches || []).filter(m => m.similarity > 0.85);
-  log(`precedents=${(evidence.precedents || []).length} photo_matches>0.85=${recycled.length} clauses=${(verdict.clauses || []).length}`);
+  const recycled = (evidence.photo_matches || []).filter(m => m.similarity > 0.9);
+  log(`precedents=${(evidence.precedents || []).length} photo_matches>0.9=${recycled.length} clauses=${(verdict.clauses || []).length}`);
 
   log('record the human override as a precedent');
   const dec = await (await fetch(`${api}/decision`, {

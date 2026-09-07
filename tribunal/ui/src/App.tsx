@@ -449,7 +449,7 @@ function AgentCard({ id, s, evidence }: { id: string; s: AgentState; evidence?: 
     : id === 'structure' && s.data ? `${Object.values(s.data).filter(v => v != null).length} fields` : ''
   // The recycled-photo signal belongs on the Fraud card too, not only in the record.
   const shot = id === 'fraud' ? (evidence?.photo_matches ?? [])[0] : null
-  const shotBadge = shot && Number(shot.similarity) >= 0.85 ? `photo seen · ${shot.claim_id}` : ''
+  const shotBadge = shot && Number(shot.similarity) >= 0.9 ? `photo seen · ${shot.claim_id}` : ''
   const body = id === 'ocr' ? (s.extra?.preview ?? '') : id === 'structure' ? (s.data ? JSON.stringify(s.data, null, 1) : s.text) : s.text
   return (
     <div className={`agent ${s.status} ${id}`}>
