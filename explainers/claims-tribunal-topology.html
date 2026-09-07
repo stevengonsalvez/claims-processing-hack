@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claims Tribunal — System Topology</title>
+<style>
+  :root {
+    --ivory: #FAF9F5;
+    --slate: #141413;
+    --clay: #D97757;
+    --oat: #E3DACC;
+    --olive: #788C5D;
+    --rust: #B04A3F;
+    --gray-150: #F0EEE6;
+    --gray-300: #D1CFC5;
+    --gray-500: #87867F;
+    --gray-700: #3D3D3A;
+    --serif: ui-serif, Georgia, 'Times New Roman', serif;
+    --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --mono: ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--ivory);
+    color: var(--gray-700);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.65;
+    padding: 48px 24px 80px;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 40px;
+  }
+
+  @media (max-width: 960px) {
+    .page { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    grid-column: 1 / -1;
+    margin-bottom: 8px;
+  }
+
+  .repo-line {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--gray-500);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 32px;
+    line-height: 1.25;
+    color: var(--slate);
+    margin-bottom: 16px;
+  }
+
+  .summary {
+    max-width: 760px;
+    font-size: 15.5px;
+  }
+  .summary code { font-family: var(--mono); font-size: 13px; }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 22px;
+    color: var(--slate);
+    margin: 36px 0 16px;
+  }
+
+  /* ---------- Diagram ---------- */
+  .diagram-panel {
+    border: 1.5px solid var(--gray-300);
+    border-radius: 12px;
+    background: #fff;
+    padding: 20px;
+    overflow-x: auto;
+  }
+
+  svg.flow { display: block; max-width: 100%; }
+  .flow text {
+    font-family: var(--mono);
+    font-size: 12px;
+    fill: var(--slate);
+  }
+  .flow .sub { font-size: 10px; fill: var(--gray-500); }
+  .flow .box { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; }
+  .flow .box.hot { fill: rgba(217,119,87,0.10); stroke: var(--clay); }
+  .flow .arrow { stroke: var(--gray-500); stroke-width: 1.5; fill: none; }
+
+  /* ---------- Walkthrough ---------- */
+  .step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 18px;
+    padding: 20px 0;
+    border-bottom: 1.5px solid var(--gray-150);
+  }
+  .step:last-of-type { border-bottom: none; }
+
+  .badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--oat);
+    border: 1.5px solid var(--gray-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--slate);
+    font-size: 14px;
+  }
+  .step.hot .badge {
+    background: rgba(217,119,87,0.14);
+    border-color: var(--clay);
+    color: var(--clay);
+  }
+
+  .step-loc {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--slate);
+    margin-bottom: 6px;
+  }
+  .step-loc .range { color: var(--gray-500); }
+
+  .step-body p { margin-bottom: 10px; }
+
+  details.snippet { margin-top: 6px; }
+  details.snippet summary {
+    list-style: none;
+    cursor: pointer;
+    font-size: 12.5px;
+    color: var(--gray-500);
+    font-family: var(--mono);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    user-select: none;
+  }
+  details.snippet summary::-webkit-details-marker { display: none; }
+  details.snippet summary::before {
+    content: "▸";
+    font-size: 10px;
+    transition: transform 0.15s ease;
+  }
+  details.snippet[open] summary::before { transform: rotate(90deg); }
+
+  pre.code {
+    background: var(--slate);
+    color: #E8E6DC;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin-top: 10px;
+  }
+  pre.code .dim { color: var(--gray-500); }
+  pre.code .kw  { color: #C9B98A; }
+  pre.code .str { color: #A8BC8C; }
+
+  /* ---------- Sidebar ---------- */
+  aside {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+  }
+
+  .panel {
+    border: 1.5px solid var(--gray-300);
+    border-radius: 12px;
+    background: #fff;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+
+  .panel h3 {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+  }
+
+  .key-files { list-style: none; padding: 0; }
+  .key-files li { margin-bottom: 12px; }
+  .key-files li:last-child { margin-bottom: 0; }
+  .key-files .path {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--slate);
+    display: block;
+    margin-bottom: 2px;
+    word-break: break-all;
+  }
+  .key-files .desc {
+    font-size: 12.5px;
+    color: var(--gray-500);
+    line-height: 1.45;
+  }
+
+  .gotchas {
+    border: 1.5px solid var(--clay);
+    border-radius: 12px;
+    background: rgba(217,119,87,0.06);
+    padding: 18px 20px;
+  }
+  .gotchas h3 {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--clay);
+    margin-bottom: 10px;
+  }
+  .gotchas ul { list-style: none; padding: 0; }
+  .gotchas li {
+    position: relative;
+    padding-left: 16px;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .gotchas li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 8px;
+    width: 5px; height: 5px;
+    background: var(--clay);
+    border-radius: 2px;
+  }
+  .gotchas code { font-family: var(--mono); font-size: 11.5px; }
+
+  table.grid { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: 1.5px solid var(--gray-300); border-radius: 12px; overflow: hidden; font-size: 13px; margin: 8px 0 4px; }
+  table.grid th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-500); background: var(--gray-150); padding: 10px 12px; border-bottom: 1px solid var(--gray-300); }
+  table.grid td { padding: 9px 12px; border-bottom: 1px solid var(--gray-150); vertical-align: top; }
+  table.grid tr:last-child td { border-bottom: none; }
+  table.grid code, .step code, p code, li code { font-family: var(--mono); font-size: 12px; background: var(--gray-150); padding: 1px 5px; border-radius: 4px; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 10.5px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--gray-300); color: var(--gray-700); margin-right: 4px; }
+  .tag.local { border-color: var(--olive); color: var(--olive); } .tag.azure { border-color: #4a7fb5; color: #2f5f8f; } .tag.edge { border-color: var(--clay); color: var(--clay); }
+  .flow .box.svc { fill: #F3F6FA; stroke: #4a7fb5; } .flow .box.store { fill: #F5F2EA; stroke: var(--olive); } .flow .box.client { fill: #fff; stroke: var(--gray-500); stroke-dasharray: 4 3; }
+  .flow .zone { fill: none; stroke: var(--gray-300); stroke-dasharray: 6 4; } .flow .zonelabel { font-size: 10px; fill: var(--gray-500); letter-spacing: .08em; }
+  .flow .arrow.dim { stroke: var(--gray-300); } .flow .lbl { font-size: 10px; fill: var(--gray-700); }
+  .callout { border-left: 3px solid var(--olive); background: rgba(120,140,93,.08); padding: 10px 14px; border-radius: 6px; font-size: 13.5px; margin: 10px 0; }
+  .step-body p { font-size: 14px; }
+  h2 small { font-family: var(--sans); font-size: 12px; color: var(--gray-500); margin-left: 8px; }
+</style>
+<style data-claude-theme="injected">
+/* Claude brand polish layer for explain-to-me templates.
+ * Inject as a second <style> block AFTER the template's own <style>.
+ * Templates already use Claude's palette (ivory/slate/clay/oat/olive);
+ * this layer adds:
+ *   - Söhne-like sans stack (matches claude.ai)
+ *   - Tiempos Headline–like serif fallback for headings
+ *   - Subtle paper texture on body
+ *   - Brand badge (bottom-right)
+ *   - Clay focus ring
+ * Layout-safe: only touches typography, surface, and decoration.
+ */
+
+:root {
+  /* Re-affirm tokens in case template scoped them. */
+  --ivory:    #FAF9F5;
+  --slate:    #141413;
+  --clay:     #D97757;
+  --oat:      #E3DACC;
+  --olive:    #788C5D;
+  --gray-150: #F0EEE6;
+  --gray-300: #D1CFC5;
+  --gray-500: #87867F;
+  --gray-700: #3D3D3A;
+
+  /* claude.ai font stacks. Web fonts (Söhne, Tiempos) are licensed; the
+   * stack falls back to high-quality system fonts that read as similar. */
+  --sans:  "Söhne", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --serif: "Tiempos Headline", "Tiempos Text", "Source Serif Pro", "Iowan Old Style", "Charter", Georgia, serif;
+  --mono:  "Söhne Mono", "Berkeley Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+body {
+  background-image:
+    radial-gradient(rgba(20, 20, 19, 0.018) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.012em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+pre, code {
+  font-feature-settings: "ss01", "cv11", "calt";
+}
+pre {
+  background: var(--gray-150) !important;
+  border: 1px solid var(--gray-300);
+}
+
+body::after {
+  content: "claude · explainer";
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 999;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  background: rgba(250, 249, 245, 0.92);
+  border: 1px solid var(--gray-300);
+  border-left: 3px solid var(--clay);
+  padding: 6px 10px 6px 12px;
+  border-radius: 4px;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+@media print {
+  body::after { display: none; }
+  body { background-image: none; }
+}
+
+@media (max-width: 640px) {
+  body::after { display: none; }
+}
+
+</style>
+</head>
+
+<body>
+<div class="page">
+  <header>
+    <div class="repo-line">stevengonsalvez/claims-processing-hack @ ms-hack · tribunal/ · system topology · 7 Sep 2026</div>
+    <h1>Claims Tribunal: every component, where it runs, and what calls what</h1>
+    <p class="summary">
+      One FastAPI process is the spine. Locally it is <code>uvicorn tribunal.api:app</code> on :8423 behind a Vite dev server on :5802; in Azure the same code plus an MCP endpoint runs as <code>tribunal.mcp_http:app</code> in a Container App behind API Management. Every adjudication is an Agent Framework graph (OCR → Structure → fan-out Adjuster ‖ Fraud ‖ Policy → fan-in Arbiter) whose executors call three Azure data planes: the Foundry account (Mistral OCR endpoint, Responses API for six prompt agents, embeddings), Azure AI Search (four indexes), and Application Insights (spans + one <code>tribunal.verdict</code> record that feeds an alert rule). State lives in AI Search indexes, Blob and two JSON files; nothing else is stateful.
+    </p>
+  </header>
+
+  <main>
+    <h2 style="margin-top:0">Topology <small>boxes = processes or Azure resources · dashed = clients · arrows = the calls described below</small></h2>
+    <div class="diagram-panel"><svg class="flow" viewBox="0 0 960 720" width="960" height="720" role="img" aria-label="Claims Tribunal topology"><defs><marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#87867F"></path></marker></defs><rect class="zone" x="10" y="10" width="300" height="300" rx="14"></rect><text class="zonelabel" x="22" y="26">CLIENTS</text><rect class="box client" x="30" y="40" width="260" height="54" rx="10"></rect><text x="160" y="61.0" text-anchor="middle">React bench + claimant page</text><text class="sub" x="160" y="78.0" text-anchor="middle">Vite :5802 · fetch + SSE reader</text><rect class="box client" x="30" y="110" width="260" height="54" rx="10"></rect><text x="160" y="131.0" text-anchor="middle">VS Code / Claude Desktop</text><text class="sub" x="160" y="148.0" text-anchor="middle">MCP stdio: python -m tribunal.mcp_server</text><rect class="box client" x="30" y="180" width="260" height="54" rx="10"></rect><text x="160" y="201.0" text-anchor="middle">MCP over HTTP clients</text><text class="sub" x="160" y="218.0" text-anchor="middle">streamable-HTTP JSON-RPC</text><rect class="box client" x="30" y="250" width="260" height="44" rx="10"></rect><text x="160" y="266.0" text-anchor="middle">curl / validate.cjs / mcp_check.py</text><text class="sub" x="160" y="283.0" text-anchor="middle">proof scripts</text><rect class="zone" x="330" y="10" width="300" height="300" rx="14"></rect><text class="zonelabel" x="342" y="26">LOCAL (tmux dev-tribunal-1788777068)</text><rect class="box hot" x="350" y="40" width="260" height="64" rx="10"></rect><text x="480" y="66.0" text-anchor="middle">FastAPI · uvicorn :8423</text><text class="sub" x="480" y="83.0" text-anchor="middle">tribunal.api · SSE /adjudicate /appeal</text><rect class="box " x="350" y="120" width="260" height="64" rx="10"></rect><text x="480" y="146.0" text-anchor="middle">Agent Framework graph</text><text class="sub" x="480" y="163.0" text-anchor="middle">af_workflow: ocr→structure→[adj|fraud|pol]→arbiter</text><rect class="box store" x="350" y="200" width="260" height="44" rx="10"></rect><text x="480" y="216.0" text-anchor="middle">decisions.json · claims.json</text><text class="sub" x="480" y="233.0" text-anchor="middle">tribunal/data (write-through)</text><rect class="box " x="350" y="254" width="260" height="44" rx="10"></rect><text x="480" y="270.0" text-anchor="middle">OTel exporter</text><text class="sub" x="480" y="287.0" text-anchor="middle">azure-monitor-opentelemetry</text><rect class="zone" x="650" y="10" width="300" height="300" rx="14"></rect><text class="zonelabel" x="662" y="26">AZURE EDGE (rg-labuser-0009)</text><rect class="box svc" x="670" y="40" width="260" height="54" rx="10"></rect><text x="800" y="61.0" text-anchor="middle">API Management · BasicV2</text><text class="sub" x="800" y="78.0" text-anchor="middle">msagthack-apim-…azure-api.net</text><rect class="box svc" x="670" y="110" width="260" height="64" rx="10"></rect><text x="800" y="136.0" text-anchor="middle">Container App · claims-tribunal</text><text class="sub" x="800" y="153.0" text-anchor="middle">uvicorn tribunal.mcp_http:app :8000 · REST + /mcp</text><rect class="box svc" x="670" y="190" width="260" height="44" rx="10"></rect><text x="800" y="206.0" text-anchor="middle">Container Registry</text><text class="sub" x="800" y="223.0" text-anchor="middle">msagthackcr6ahymubsyajs6 (az acr build)</text><rect class="box svc" x="670" y="244" width="260" height="44" rx="10"></rect><text x="800" y="260.0" text-anchor="middle">Container Apps environment</text><text class="sub" x="800" y="277.0" text-anchor="middle">msagthack-acaenv-6ahymubsyajs6</text><rect class="zone" x="10" y="330" width="940" height="370" rx="14"></rect><text class="zonelabel" x="22" y="346">AZURE PLATFORM SERVICES (swedencentral)</text><rect class="box svc" x="30" y="360" width="290" height="84" rx="10"></rect><text x="175" y="396.0" text-anchor="middle">Microsoft Foundry account + project</text><text class="sub" x="175" y="413.0" text-anchor="middle">msagthack-aifoundry / msagthack-aiproject</text><text class="sub" x="175" y="432" text-anchor="middle">gpt-4.1-mini · text-embedding-3-large · mistral-document-ai-2512</text><rect class="box svc" x="30" y="460" width="290" height="64" rx="10"></rect><text x="175" y="486.0" text-anchor="middle">6 prompt agents (Responses API)</text><text class="sub" x="175" y="503.0" text-anchor="middle">TribunalStructure/Adjuster/Fraud/Policy/Arbiter/PhotoDescriber</text><rect class="box svc" x="30" y="540" width="290" height="44" rx="10"></rect><text x="175" y="556.0" text-anchor="middle">Document Intelligence · F0</text><text class="sub" x="175" y="573.0" text-anchor="middle">prebuilt-read (OCR benchmark only)</text><rect class="box svc" x="30" y="596" width="290" height="44" rx="10"></rect><text x="175" y="612.0" text-anchor="middle">Evaluation + Red team (project)</text><text class="sub" x="175" y="629.0" text-anchor="middle">cloud_eval.py · redteam.py · continuous eval</text><rect class="box store" x="350" y="360" width="270" height="100" rx="10"></rect><text x="485" y="404.0" text-anchor="middle">Azure AI Search · standard</text><text class="sub" x="485" y="421.0" text-anchor="middle">msagthack-search · semantic ranker free</text><text class="sub" x="485" y="428" text-anchor="middle">insurance-documents-index 68 · prior-claims 43</text><text class="sub" x="485" y="444" text-anchor="middle">claim-photos 5 · precedents (adjuster rulings)</text><rect class="box store" x="350" y="480" width="270" height="54" rx="10"></rect><text x="485" y="501.0" text-anchor="middle">Blob Storage · claims-data</text><text class="sub" x="485" y="518.0" text-anchor="middle">msagthacksa6ahymubsyajs6 · 20 blobs</text><rect class="box store" x="350" y="554" width="270" height="54" rx="10"></rect><text x="485" y="575.0" text-anchor="middle">Log Analytics workspace</text><text class="sub" x="485" y="592.0" text-anchor="middle">msagthack-loganalytics · AppDependencies/AppTraces</text><rect class="box svc" x="650" y="360" width="280" height="64" rx="10"></rect><text x="790" y="386.0" text-anchor="middle">Application Insights</text><text class="sub" x="790" y="403.0" text-anchor="middle">msagthack-appinsights · spans + tribunal.verdict</text><rect class="box svc" x="650" y="444" width="280" height="54" rx="10"></rect><text x="790" y="465.0" text-anchor="middle">Alert rule · tribunal-fraud-referrals</text><text class="sub" x="790" y="482.0" text-anchor="middle">KQL every 5 min, 15 min window, sev 2</text><rect class="box svc" x="650" y="518" width="280" height="44" rx="10"></rect><text x="790" y="534.0" text-anchor="middle">Action group · tribunal-alerts</text><text class="sub" x="790" y="551.0" text-anchor="middle">email</text><rect class="box svc" x="650" y="582" width="280" height="44" rx="10"></rect><text x="790" y="598.0" text-anchor="middle">GitHub fork · ms-hack</text><text class="sub" x="790" y="615.0" text-anchor="middle">stevengonsalvez/claims-processing-hack</text><line class="arrow " x1="290" y1="67" x2="350" y2="67" marker-end="url(#arrowHead)"></line><text class="lbl" x="320" y="60" text-anchor="middle">SSE</text><line class="arrow " x1="290" y1="137" x2="350" y2="90" marker-end="url(#arrowHead)"></line><text class="lbl" x="300" y="108" text-anchor="middle">httpx</text><line class="arrow " x1="290" y1="207" x2="670" y2="67" marker-end="url(#arrowHead)"></line><text class="lbl" x="480" y="165" text-anchor="middle">/tribunal-mcp</text><line class="arrow " x1="800" y1="94" x2="800" y2="110" marker-end="url(#arrowHead)"></line><text class="lbl" x="848" y="104" text-anchor="middle">passthrough</text><line class="arrow dim" x1="800" y1="190" x2="800" y2="174" marker-end="url(#arrowHead)"></line><line class="arrow " x1="480" y1="104" x2="480" y2="120" marker-end="url(#arrowHead)"></line><line class="arrow dim" x1="480" y1="184" x2="480" y2="200" marker-end="url(#arrowHead)"></line><line class="arrow dim" x1="480" y1="244" x2="480" y2="254" marker-end="url(#arrowHead)"></line><line class="arrow " x1="420" y1="184" x2="175" y2="360" marker-end="url(#arrowHead)"></line><text class="lbl" x="255" y="262" text-anchor="middle">Responses API + OCR</text><line class="arrow " x1="500" y1="184" x2="485" y2="360" marker-end="url(#arrowHead)"></line><text class="lbl" x="560" y="300" text-anchor="middle">vector / hybrid / semantic</text><line class="arrow " x1="610" y1="276" x2="790" y2="360" marker-end="url(#arrowHead)"></line><text class="lbl" x="705" y="322" text-anchor="middle">v2.1/track</text><line class="arrow dim" x1="790" y1="424" x2="790" y2="444" marker-end="url(#arrowHead)"></line><line class="arrow dim" x1="790" y1="498" x2="790" y2="518" marker-end="url(#arrowHead)"></line><line class="arrow " x1="485" y1="460" x2="485" y2="480" marker-end="url(#arrowHead)"></line><text class="lbl" x="520" y="474" text-anchor="middle">source_url</text><line class="arrow dim" x1="650" y1="396" x2="620" y2="580" marker-end="url(#arrowHead)"></line><line class="arrow dim" x1="720" y1="174" x2="640" y2="360" marker-end="url(#arrowHead)"></line><text class="lbl" x="715" y="260" text-anchor="middle">same calls</text></svg></div>
+
+    <h2>Where things run</h2>
+    <table class="grid">
+      <thead><tr><th style="width:190px">Component</th><th>Hosting</th><th>Address</th><th style="width:220px">Auth</th></tr></thead>
+      <tbody>
+        <tr><td>React bench + claimant page</td><td><span class="tag local">local</span> Vite dev server, tmux window <code>ui</code></td><td><code>http://localhost:5802</code>, <code>/claim/&lt;id&gt;</code> (client-side route)</td><td>none</td></tr>
+        <tr><td>Tribunal API</td><td><span class="tag local">local</span> <code>uvicorn tribunal.api:app --reload</code>, tmux window <code>api</code></td><td><code>http://localhost:8423</code> · <code>/samples /adjudicate /decision /claims/{id} /appeal /decisions /data/*</code></td><td>none (localhost)</td></tr>
+        <tr><td>Container App <code>claims-tribunal</code></td><td><span class="tag azure">azure</span> Container Apps env <code>msagthack-acaenv-6ahymubsyajs6</code>, image from ACR <code>msagthackcr6ahymubsyajs6</code> (cloud build), <code>uvicorn tribunal.mcp_http:app</code> :8000, min 1 replica</td><td><code>https://claims-tribunal.niceglacier-506f72ec.swedencentral.azurecontainerapps.io</code> · REST routes + <code>/mcp</code></td><td>external ingress, no auth (demo); keys from .env as ACA secrets</td></tr>
+        <tr><td>API Management</td><td><span class="tag edge">edge</span> <code>msagthack-apim-6ahymubsyajs6</code>, sku BasicV2 (Consumption not offered in swedencentral)</td><td><code>https://msagthack-apim-6ahymubsyajs6.azure-api.net/tribunal/*</code> (REST) · <code>/tribunal-mcp</code> (MCP passthrough)</td><td>subscriptionRequired=false</td></tr>
+        <tr><td>MCP stdio server</td><td><span class="tag local">local</span> spawned by VS Code / Claude Desktop: <code>.venv/bin/python -m tribunal.mcp_server</code> (<code>.vscode/mcp.json</code>)</td><td>JSON-RPC over stdio → calls the API at <code>TRIBUNAL_API</code></td><td>inherits the API's</td></tr>
+        <tr><td>Foundry account + project</td><td><span class="tag azure">azure</span> AIServices account <code>msagthack-aifoundry-6ahymubsyajs6</code>, project <code>msagthack-aiproject-6ahymubsyajs6</code></td><td>project <code>…services.ai.azure.com/api/projects/…</code> · OpenAI v1 <code>…cognitiveservices.azure.com/openai/v1/</code> · Mistral <code>…/providers/mistral/azure/ocr</code></td><td>Entra (DefaultAzureCredential → az CLI token) for agents; api-key for embeddings + OCR</td></tr>
+        <tr><td>Model deployments</td><td><span class="tag azure">azure</span> on the Foundry account</td><td><code>gpt-4.1-mini</code> GlobalStandard 100K TPM · <code>text-embedding-3-large</code> Standard 50K TPM · <code>mistral-document-ai-2512</code> GlobalStandard 5</td><td>as above</td></tr>
+        <tr><td>Azure AI Search</td><td><span class="tag azure">azure</span> <code>msagthack-search-6ahymubsyajs6</code>, standard, semantic ranker (free plan)</td><td><code>https://msagthack-search-6ahymubsyajs6.search.windows.net</code> · indexes <code>insurance-documents-index</code> (68), <code>prior-claims</code> (43), <code>claim-photos</code> (5), <code>precedents</code></td><td>admin key (SEARCH_ADMIN_KEY)</td></tr>
+        <tr><td>Blob Storage</td><td><span class="tag azure">azure</span> <code>msagthacksa6ahymubsyajs6</code>, container <code>claims-data</code></td><td>policies, statement pages, damage photos (20 blobs); <code>source_url</code> stamped on policy chunks</td><td>connection string; private container</td></tr>
+        <tr><td>Document Intelligence</td><td><span class="tag azure">azure</span> <code>msagthack-docintel-6ahymubsyajs6</code>, F0</td><td>prebuilt-read, used by <code>tribunal/ocr_bench.py</code> only</td><td>Entra only (policy forces disableLocalAuth)</td></tr>
+        <tr><td>Application Insights + Log Analytics</td><td><span class="tag azure">azure</span> <code>msagthack-appinsights-6ahymubsyajs6</code> (workspace-based) → <code>msagthack-loganalytics-6ahymubsyajs6</code></td><td>ingestion <code>https://swedencentral-0.in.applicationinsights.azure.com/v2.1/track</code>; tables AppRequests, AppDependencies, AppTraces</td><td>connection string</td></tr>
+        <tr><td>Alerting</td><td><span class="tag azure">azure</span> scheduled query rule <code>tribunal-fraud-referrals</code> + action group <code>tribunal-alerts</code></td><td>KQL over AppTraces every 5 min, 15 min window, severity 2, email</td><td>n/a</td></tr>
+        <tr><td>Local stores</td><td><span class="tag local">local</span> repo, gitignored</td><td><code>tribunal/data/decisions.json</code> (human sign-offs), <code>tribunal/data/claims.json</code> (case files: verdict, decisions, appeals)</td><td>n/a</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Components inside the API process</h2>
+    <table class="grid">
+      <thead><tr><th style="width:190px">Module</th><th>Role</th><th style="width:300px">Talks to</th></tr></thead>
+      <tbody>
+        <tr><td><code>tribunal/api.py</code></td><td>FastAPI routes; SSE plumbing (<code>_sse()</code>); case files; decision write-back</td><td>af_workflow, appeal, precedent</td></tr>
+        <tr><td><code>tribunal/af_workflow.py</code></td><td>Agent Framework <code>WorkflowBuilder</code>: <code>OcrExecutor → StructureExecutor → add_fan_out_edges([Adjuster, Fraud, Policy]) → add_fan_in_edges(Arbiter)</code>; typed messages ClaimIntake, OcrText, ClaimRecord, Evidence, Opinion, VerdictMsg; streaming through <code>ctx.yield_output</code></td><td>foundry, workflow (evidence, build_verdict), telemetry</td></tr>
+        <tr><td><code>tribunal/workflow.py</code></td><td>Reference implementation; owns <code>gather_evidence</code>, <code>build_verdict</code> (net payout in Python), prompt blocks for precedents and photo matches</td><td>search_tools, precedent, photo_index, challenge-2 <code>ocr_agent.extract_text_with_ocr</code></td></tr>
+        <tr><td><code>tribunal/foundry.py</code></td><td>Creates each prompt agent once per process (<code>agents.create_version</code>), runs it with <code>responses.create(stream=True, extra_body.agent_reference)</code>, splits prose from JSON</td><td>Foundry project (aio client)</td></tr>
+        <tr><td><code>tribunal/prompts.py</code></td><td>Structure, Adjuster, Fraud, Policy, Arbiter prompts; precedent + recycled-photo rules; clause schema</td><td>none</td></tr>
+        <tr><td><code>tribunal/search_tools.py</code></td><td>Index definitions (client-side vectors + AzureOpenAIVectorizer + semantic config), <code>search_policies</code> (semantic hybrid → whole policy by <code>file_name</code>), <code>search_prior_claims</code></td><td>AI Search, embeddings endpoint</td></tr>
+        <tr><td><code>tribunal/precedent.py</code></td><td><code>record_precedent</code> (embed, upload, wait until searchable), <code>search_precedents</code>, <code>purge</code></td><td>AI Search <code>precedents</code></td></tr>
+        <tr><td><code>tribunal/photo_index.py</code></td><td>gpt-4.1-mini vision description → embedding → <code>claim-photos</code>; <code>match_photo</code> for recycled-photo detection</td><td>Responses API, AI Search</td></tr>
+        <tr><td><code>tribunal/appeal.py</code></td><td>Second session against verdict v1 (same evidence gathering + appeal text/photo); Appeals Arbiter answers clause by clause; outcome derived from the decision change</td><td>same as workflow</td></tr>
+        <tr><td><code>tribunal/telemetry.py</code></td><td><code>configure_azure_monitor</code>; spans <code>tribunal.adjudicate</code>, <code>agent *</code> with gen_ai.* attributes; <code>record_verdict</code> log record for the alert</td><td>App Insights</td></tr>
+        <tr><td><code>tribunal/mcp_server.py</code> / <code>mcp_http.py</code></td><td>MCP tools <code>list_sample_claims</code>, <code>adjudicate_claim</code>, <code>record_decision</code>; stdio locally, streamable HTTP mounted at <code>/mcp</code> in the container</td><td>the REST routes (httpx / in-process)</td></tr>
+        <tr><td><code>tribunal/ui/</code></td><td>React 19 + Vite: bench (App.tsx), claimant page (Claimant.tsx), fetch-based SSE parser, keyboard shortcuts</td><td>API only</td></tr>
+        <tr><td>eval + ops scripts</td><td><code>eval.py</code> scorecard, <code>quality.py</code> judges, <code>cloud_eval.py</code> (Foundry Evaluation tab), <code>redteam.py</code>, <code>ocr_bench.py</code>, <code>alerts.sh</code>, <code>deploy_infra.sh</code>, <code>deploy_aca.sh</code>, <code>apim_mcp.sh</code>, <code>seed.py</code>, <code>blob_upload.py</code></td><td>Azure control + data planes</td></tr>
+      </tbody>
+    </table>
+
+    <h2>One adjudication, call by call <small>crash4 in the browser, 44-49 s wall clock</small></h2>
+    <div class="diagram-panel"><svg class="flow" viewBox="0 0 960 420" width="960" height="420" role="img" aria-label="Adjudication call sequence"><defs><marker id="arrowHead2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#87867F"></path></marker></defs><rect class="box" x="-10" y="10" width="140" height="34" rx="8"></rect><text x="60" y="32" text-anchor="middle">Browser</text><line x1="60" y1="44" x2="60" y2="410" stroke="#D1CFC5" stroke-width="1"></line><rect class="box" x="150" y="10" width="140" height="34" rx="8"></rect><text x="220" y="32" text-anchor="middle">FastAPI :8423</text><line x1="220" y1="44" x2="220" y2="410" stroke="#D1CFC5" stroke-width="1"></line><rect class="box" x="310" y="10" width="140" height="34" rx="8"></rect><text x="380" y="32" text-anchor="middle">AF graph</text><line x1="380" y1="44" x2="380" y2="410" stroke="#D1CFC5" stroke-width="1"></line><rect class="box" x="470" y="10" width="140" height="34" rx="8"></rect><text x="540" y="32" text-anchor="middle">Mistral OCR</text><line x1="540" y1="44" x2="540" y2="410" stroke="#D1CFC5" stroke-width="1"></line><rect class="box" x="630" y="10" width="140" height="34" rx="8"></rect><text x="700" y="32" text-anchor="middle">Responses API</text><line x1="700" y1="44" x2="700" y2="410" stroke="#D1CFC5" stroke-width="1"></line><rect class="box" x="790" y="10" width="140" height="34" rx="8"></rect><text x="860" y="32" text-anchor="middle">AI Search</text><line x1="860" y1="44" x2="860" y2="410" stroke="#D1CFC5" stroke-width="1"></line><line class="arrow" x1="60" y1="70" x2="220" y2="70" marker-end="url(#arrowHead2)"></line><text class="lbl" x="140" y="65" text-anchor="middle">POST /adjudicate (multipart)</text><line class="arrow" x1="220" y1="95" x2="380" y2="95" marker-end="url(#arrowHead2)"></line><text class="lbl" x="300" y="90" text-anchor="middle">workflow.run(ClaimIntake, stream=True)</text><line class="arrow" x1="380" y1="120" x2="540" y2="120" marker-end="url(#arrowHead2)"></line><text class="lbl" x="460" y="115" text-anchor="middle">POST /providers/mistral/azure/ocr ×2 pages</text><line class="arrow" x1="380" y1="145" x2="700" y2="145" marker-end="url(#arrowHead2)"></line><text class="lbl" x="540" y="140" text-anchor="middle">responses.create(agent_reference=Structure, stream)</text><line class="arrow" x1="380" y1="170" x2="860" y2="170" marker-end="url(#arrowHead2)"></line><text class="lbl" x="620" y="165" text-anchor="middle">embeddings + prior-claims · policies · precedents · claim-photos</text><line class="arrow" x1="380" y1="195" x2="700" y2="195" marker-end="url(#arrowHead2)"></line><text class="lbl" x="540" y="190" text-anchor="middle">PhotoDescriber (input_image) → embed → claim-photos</text><rect x="300" y="215" width="560" height="70" rx="8" fill="rgba(217,119,87,0.08)" stroke="#D97757" stroke-width="1"></rect><text class="sub" x="310" y="230">FAN-OUT · 3 concurrent streams</text><line class="arrow" x1="380" y1="250" x2="700" y2="250" marker-end="url(#arrowHead2)"></line><text class="lbl" x="540" y="245" text-anchor="middle">Adjuster (claim + photo) ‖ Fraud (claim + prior + photo matches + precedents) ‖ Policy (claim + whole policy)</text><line class="arrow" x1="700" y1="275" x2="380" y2="275" marker-end="url(#arrowHead2)"></line><text class="lbl" x="540" y="270" text-anchor="middle">response.output_text.delta → agent.token</text><line class="arrow" x1="380" y1="305" x2="700" y2="305" marker-end="url(#arrowHead2)"></line><text class="lbl" x="540" y="300" text-anchor="middle">Arbiter (3 opinions + precedents + photo) → prose ===JSON=== clauses</text><line class="arrow" x1="380" y1="330" x2="220" y2="330" marker-end="url(#arrowHead2)"></line><text class="lbl" x="300" y="325" text-anchor="middle">VerdictMsg → build_verdict → record_verdict (OTel)</text><line class="arrow" x1="220" y1="355" x2="60" y2="355" marker-end="url(#arrowHead2)"></line><text class="lbl" x="140" y="350" text-anchor="middle">event: verdict · event: end</text><line class="arrow" x1="60" y1="385" x2="220" y2="385" marker-end="url(#arrowHead2)"></line><text class="lbl" x="140" y="380" text-anchor="middle">POST /decision {verdict, human_decision, reason} → precedents index</text></svg></div>
+
+    <div class="step"><div class="badge">1</div><div class="step-body"><div class="step-loc">tribunal/ui/src/App.tsx<span class="range"> run()</span></div><p>The bench posts multipart <code>sample=crash4</code> (or uploaded statement pages + a photo) to <code>POST /adjudicate</code> and reads the response body as a stream, parsing SSE frames by hand because <code>EventSource</code> cannot POST. Events: <code>claim.start</code>, <code>agent.start</code>, <code>agent.token</code>, <code>agent.done</code>, <code>claim</code>, <code>evidence</code>, <code>verdict</code>, <code>error</code>, <code>end</code>.</p><details class="snippet"><summary>show call</summary><pre class="code">POST http://localhost:8423/adjudicate\nContent-Type: multipart/form-data; sample=crash4\n→ 200 text/event-stream\nevent: claim.start\ndata: {{\&quot;claim_id\&quot;: \&quot;CLM-20260907-AF6B2E\&quot;, \&quot;sample\&quot;: \&quot;crash4\&quot;}}</pre></details></div></div>
+    <div class="step"><div class="badge">2</div><div class="step-body"><div class="step-loc">tribunal/api.py → tribunal/af_workflow.py<span class="range"> adjudicate()</span></div><p>The route builds an <code>asyncio.Queue</code>, starts <code>workflow.run(ClaimIntake, stream=True)</code> and yields each <code>TribunalEvent</code> the executors emit via <code>ctx.yield_output</code>; the runner polls its event queue while a superstep is still running, so tokens stream mid-step rather than at step boundaries.</p></div></div>
+    <div class="step"><div class="badge">3</div><div class="step-body"><div class="step-loc">OcrExecutor → challenge-2/agents/ocr_agent.py<span class="range"> extract_text_with_ocr</span></div><p>Both statement pages go to the Foundry account's Mistral OCR route in parallel threads, base64 image in the body, <code>api-key</code> header; the response's <code>pages[].markdown</code> is joined into one text.</p><details class="snippet"><summary>show call</summary><pre class="code">POST https://msagthack-aifoundry-6ahymubsyajs6.cognitiveservices.azure.com/providers/mistral/azure/ocr\napi-key: &lt;AI_FOUNDRY_KEY&gt;\n{{\&quot;model\&quot;: \&quot;mistral-document-ai-2512\&quot;, \&quot;document\&quot;: {{\&quot;type\&quot;: \&quot;image_url\&quot;, \&quot;image_url\&quot;: \&quot;data:image/jpeg;base64,…\&quot;}}}}\n→ {{\&quot;pages\&quot;: [{{\&quot;markdown\&quot;: \&quot;# ACCIDENT STATEMENT FORM …\&quot;}}]}}</pre></details></div></div>
+    <div class="step hot"><div class="badge">4</div><div class="step-body"><div class="step-loc">StructureExecutor → tribunal/foundry.py<span class="range"> run_agent()</span></div><p>First call per process creates the agent version (<code>agents.create_version(PromptAgentDefinition(model='gpt-4.1-mini', instructions=…))</code>, visible in the Foundry portal); every call after that is a streaming Responses request with <code>agent_reference</code>. Auth is an Entra bearer token from <code>DefaultAzureCredential</code> (the az CLI login of the lab user).</p><details class="snippet"><summary>show call</summary><pre class="code">POST https://msagthack-aifoundry-6ahymubsyajs6.services.ai.azure.com/api/projects/msagthack-aiproject-6ahymubsyajs6/openai/v1/responses\nAuthorization: Bearer &lt;entra token&gt;\n{{\&quot;input\&quot;: [{{\&quot;role\&quot;: \&quot;user\&quot;, \&quot;content\&quot;: [{{\&quot;type\&quot;: \&quot;input_text\&quot;, \&quot;text\&quot;: \&quot;OCR TEXT: …\&quot;}}]}}],\n \&quot;stream\&quot;: true, \&quot;agent_reference\&quot;: {{\&quot;name\&quot;: \&quot;TribunalStructureAgent\&quot;, \&quot;type\&quot;: \&quot;agent_reference\&quot;}}}}\n→ event stream: response.output_text.delta {{\&quot;delta\&quot;: \&quot;{{\\n \\\&quot;policy_number\\\&quot;\&quot;}} …</pre></details></div></div>
+    <div class="step"><div class="badge">5</div><div class="step-body"><div class="step-loc">tribunal/workflow.py<span class="range"> gather_evidence()</span></div><p>Four retrievals in one <code>asyncio.gather</code>: prior claims (client-side embedding of the claim summary, pure vector k=5 on <code>prior-claims</code>), policies (semantic hybrid on <code>insurance-documents-index</code> to pick the document, then every chunk of that file by <code>$filter=file_name eq …</code>), adjuster precedents (vector, <code>precedents</code>), and the damage photo (Responses call to <code>TribunalPhotoDescriber</code> with <code>input_image</code>, embed the description, vector k=4 on <code>claim-photos</code>). The <code>evidence</code> event carries all four; the UI's evidence board renders it.</p><details class="snippet"><summary>show call</summary><pre class="code">POST https://msagthack-aifoundry-6ahymubsyajs6.cognitiveservices.azure.com/openai/v1/embeddings   api-key\n{{\&quot;model\&quot;: \&quot;text-embedding-3-large\&quot;, \&quot;input\&quot;: \&quot;policy_number: COMM-AUTO-001 …\&quot;}}\n\nPOST https://msagthack-search-6ahymubsyajs6.search.windows.net/indexes/prior-claims/docs/search?api-version=2024-07-01   api-key\n{{\&quot;vectorQueries\&quot;: [{{\&quot;kind\&quot;: \&quot;vector\&quot;, \&quot;vector\&quot;: [3072 floats], \&quot;k\&quot;: 5, \&quot;fields\&quot;: \&quot;content_vector\&quot;}}], \&quot;top\&quot;: 5}}\n→ CLM-0412 @search.score 0.781 (same VIN, paid $4,850)\n\nPOST …/indexes/insurance-documents-index/docs/search   queryType=semantic, semanticConfiguration=insurance-semantic, search + vectorQueries\nPOST …/indexes/insurance-documents-index/docs/search   $filter=file_name eq &#x27;commercial_auto_policy.md&#x27;, top=100\n\nPOST …/indexes/claim-photos/docs/search   vector of the photo description → CLM-0412 crash4.jpg 0.944</pre></details></div></div>
+    <div class="step"><div class="badge">6</div><div class="step-body"><div class="step-loc">AdjusterExecutor ‖ FraudExecutor ‖ PolicyExecutor<span class="range"> fan-out</span></div><p>Three concurrent Responses streams. Adjuster gets the claim JSON plus the photo as <code>input_image</code>; Fraud gets the claim, the five prior claims, the photo matches, the precedents and the photo; Policy gets the claim, the whole policy document and the precedents. Each token becomes an <code>agent.token</code> event; each agent ends with prose then <code>===JSON===</code> and a typed object (<code>Opinion</code>). App Insights shows the three <code>agent *</code> spans starting within 2 ms of each other.</p></div></div>
+    <div class="step hot"><div class="badge">7</div><div class="step-body"><div class="step-loc">ArbiterExecutor (fan-in) → build_verdict → record_verdict<span class="range"> verdict</span></div><p>The fan-in handler receives <code>list[Opinion]</code> once all three have landed and calls the Arbiter with the claim, the three opinions, the precedent block and the photo block. Its JSON carries decision, confidence, payout numbers, disagreements, referral reason, <code>clauses[{{clause, evidence_refs[]}}]</code> and the claimant letter. Python computes <code>net = max(0, min(covered, limit) − deductible)</code>, attaches <code>what_if</code> for the slider, sets span attributes and writes the <code>tribunal.verdict</code> log record, then emits <code>verdict</code>. Fraud never denies: suspected fraud refers to the SIU.</p></div></div>
+    <div class="step"><div class="badge">8</div><div class="step-body"><div class="step-loc">tribunal/telemetry.py → Application Insights<span class="range"> OTel</span></div><p>The <code>azure-monitor-opentelemetry</code> exporter batches spans and log records to the regional ingestion endpoint. One trace per claim: <code>tribunal.adjudicate</code> with six <code>agent *</code> children carrying <code>gen_ai.agent.name</code>, <code>gen_ai.request.model</code>, <code>claim.id</code>; the verdict record carries <code>tribunal.decision</code>, <code>tribunal.fraud_score</code>, <code>tribunal.net_payout</code>.</p><details class="snippet"><summary>show call</summary><pre class="code">POST https://swedencentral-0.in.applicationinsights.azure.com/v2.1/track\n[{{\&quot;name\&quot;: \&quot;RemoteDependency\&quot;, \&quot;data\&quot;: {{\&quot;baseData\&quot;: {{\&quot;name\&quot;: \&quot;agent fraud\&quot;, \&quot;duration\&quot;: \&quot;00:00:12.6\&quot;, \&quot;properties\&quot;: {{\&quot;claim.id\&quot;: \&quot;CLM-…\&quot;, \&quot;gen_ai.agent.name\&quot;: \&quot;fraud\&quot;}}}}}}}}, …]\n\nKQL (alert, every 5 min over 15 min):\nAppTraces | where Message has \&quot;tribunal.verdict\&quot; | extend fraud_score = todouble(Properties[\&quot;tribunal.fraud_score\&quot;]) | where fraud_score &gt; 0.6</pre></details></div></div>
+    <div class="step"><div class="badge">9</div><div class="step-body"><div class="step-loc">tribunal/ui/src/App.tsx → POST /decision → tribunal/precedent.py<span class="range"> human sign-off</span></div><p>Approve / Deny / Override sends <code>{{claim_id, human_decision, reason, verdict}}</code>. The API appends the audit row to <code>decisions.json</code>, then <code>record_precedent</code> writes a document to the <code>precedents</code> index (embedding of the ruling text) and polls <code>get_document</code> until AI Search has committed it, so the very next tribunal can cite it. Response: <code>{{ok, count, precedent_id}}</code>.</p><details class="snippet"><summary>show call</summary><pre class="code">POST /decision  {{\&quot;claim_id\&quot;: \&quot;CLM-20260907-AF6B2E\&quot;, \&quot;human_decision\&quot;: \&quot;override\&quot;, \&quot;reason\&quot;: \&quot;SIU cleared VIN reuse: bill of sale June 2025\&quot;, \&quot;verdict\&quot;: {{…}}}}\n→ POST …/indexes/precedents/docs/index  {{\&quot;value\&quot;: [{{\&quot;@search.action\&quot;: \&quot;mergeOrUpload\&quot;, \&quot;id\&quot;: \&quot;PREC-CLM-20260907-AF6B2E-140327\&quot;, …}}]}}\n→ GET  …/indexes/precedents/docs/PREC-… (poll until 200)\n→ {{\&quot;ok\&quot;: true, \&quot;count\&quot;: 3, \&quot;precedent_id\&quot;: \&quot;PREC-CLM-20260907-AF6B2E-140327\&quot;}}</pre></details></div></div>
+    <div class="step"><div class="badge">10</div><div class="step-body"><div class="step-loc">tribunal/ui/src/Claimant.tsx → POST /appeal → tribunal/appeal.py<span class="range"> appeal</span></div><p>The claimant page loads <code>GET /claims/{{id}}</code> (verdict, decisions, appeals from <code>claims.json</code>) and posts the appeal text plus an optional photo. <code>adjudicate_appeal</code> re-runs evidence gathering with the appeal text folded into the query, re-hears the three specialists with verdict v1 in their context, then the Appeals Arbiter answers v1 clause by clause. The API promotes v2 to the standing verdict and emits <code>appeal.verdict {{v1, v2, outcome, diff}}</code>; <code>outcome</code> is <code>overturn</code> only if the decision actually changed.</p><details class="snippet"><summary>show call</summary><pre class="code">POST /appeal  multipart claim_id=CLM-…, appeal_text=\&quot;I bought the Outback from Andrew Bennett in June 2025 …\&quot;, photo=&lt;optional&gt;\n→ text/event-stream … event: appeal.verdict\ndata: {{\&quot;outcome\&quot;: \&quot;uphold\&quot;, \&quot;diff\&quot;: [{{\&quot;field\&quot;: \&quot;confidence\&quot;, \&quot;v1\&quot;: 0.9, \&quot;v2\&quot;: 0.95}}], \&quot;v2\&quot;: {{\&quot;decision\&quot;: \&quot;refer\&quot;, …}}}}</pre></details></div></div>
+    <div class="step"><div class="badge">11</div><div class="step-body"><div class="step-loc">tribunal/mcp_server.py · tribunal/mcp_http.py<span class="range"> MCP</span></div><p>Two transports, one tool set. Locally VS Code (<code>.vscode/mcp.json</code>) or Claude Desktop spawns the stdio server, which calls the REST API with httpx and returns the verdict dict (<code>adjudicate_claim</code> streams the SSE and collects <code>verdict</code>). In Azure the same tools are served over streamable HTTP at <code>/mcp</code> inside the container, and API Management fronts them at <code>/tribunal-mcp</code>.</p><details class="snippet"><summary>show call</summary><pre class="code">stdio:   {{\&quot;jsonrpc\&quot;: \&quot;2.0\&quot;, \&quot;method\&quot;: \&quot;tools/call\&quot;, \&quot;params\&quot;: {{\&quot;name\&quot;: \&quot;adjudicate_claim\&quot;, \&quot;arguments\&quot;: {{\&quot;sample\&quot;: \&quot;crash1\&quot;}}}}}}\n         → python httpx POST http://localhost:8423/adjudicate → verdict {{\&quot;decision\&quot;: \&quot;deny\&quot;, …}}\n\nhttp:    POST https://msagthack-apim-6ahymubsyajs6.azure-api.net/tribunal-mcp   (JSON-RPC, Accept: text/event-stream)\n         → APIM → https://claims-tribunal.niceglacier-506f72ec.swedencentral.azurecontainerapps.io/mcp → in-process tools → REST routes on :8000</pre></details></div></div>
+    <div class="step"><div class="badge">12</div><div class="step-body"><div class="step-loc">Azure Monitor → action group<span class="range"> alerting</span></div><p>Independently of any request, Azure Monitor runs the scheduled query every 5 minutes over the last 15 minutes of <code>AppTraces</code>; any <code>tribunal.verdict</code> with <code>fraud_score &gt; 0.6</code> fires <code>tribunal-fraud-referrals</code> (severity 2) → action group <code>tribunal-alerts</code> (email). This is the only push-style path in the system; everything else is request/response or SSE.</p></div></div>
+
+    <h2>Data stores and what writes them</h2>
+    <table class="grid">
+      <thead><tr><th style="width:230px">Store</th><th>Written by</th><th>Read by</th></tr></thead>
+      <tbody>
+        <tr><td><code>insurance-documents-index</code> (68 chunks, vectorizer + semantic config, <code>source_url</code>)</td><td><code>seed.py</code> (chunks per <code>##</code> section, client-side vectors)</td><td>Policy Analyst evidence (semantic hybrid, then whole document)</td></tr>
+        <tr><td><code>prior-claims</code> (43 synthetic claims; planted CLM-0412 = crash4 VIN, CLM-0431/0432 repeat claimant)</td><td><code>seed.py</code></td><td>Fraud Investigator evidence (vector k=5)</td></tr>
+        <tr><td><code>claim-photos</code> (5 described photos; crash4.jpg filed under CLM-0412)</td><td><code>photo_index.py seed</code></td><td>Fraud Investigator (recycled photo, 0.944 on crash4)</td></tr>
+        <tr><td><code>precedents</code> (adjuster rulings)</td><td><code>POST /decision</code> → <code>record_precedent</code>; <code>precedent purge</code> resets for rehearsal</td><td>Fraud, Policy and Arbiter prompts; appeal session</td></tr>
+        <tr><td>Blob <code>claims-data</code></td><td><code>blob_upload.py</code></td><td>nobody at request time; provenance links on policy chunks</td></tr>
+        <tr><td><code>tribunal/data/claims.json</code>, <code>decisions.json</code></td><td>API (write-through on verdict, decision, appeal)</td><td><code>GET /claims/{id}</code>, <code>GET /decisions</code>, claimant page</td></tr>
+        <tr><td>Log Analytics tables</td><td>OTel exporter</td><td>alert rule, KQL proofs, Foundry tracing tab</td></tr>
+        <tr><td>Foundry project (agent versions, evaluation runs, red team runs)</td><td><code>foundry.py</code>, <code>cloud_eval.py</code>, <code>redteam.py</code></td><td>portal</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Local versus Azure runtime</h2>
+    <div class="callout">The same Python package runs in both places. Locally the demo hits <code>tribunal.api:app</code> under <code>uvicorn --reload</code> (any save of <code>tribunal/*.py</code> restarts it mid-request). The container runs <code>tribunal.mcp_http:app</code>, a Starlette app that mounts the REST routes and the MCP streamable-HTTP transport at <code>/mcp</code>; its image is a snapshot built by <code>az acr build</code> at deploy time, so code changes after the last <code>deploy_aca.sh</code> are local-only until redeployed. Both call the identical Azure data planes with the same <code>.env</code> values (as ACA secrets in the cloud).</div>
+  </main>
+
+  <aside>
+    <div class="panel">
+      <h3>Key files</h3>
+      <ul class="key-files">
+        <li><span class="path">tribunal/af_workflow.py</span><span class="desc">Agent Framework graph; the default orchestrator.</span></li>
+        <li><span class="path">tribunal/api.py</span><span class="desc">All HTTP routes, SSE, case files, precedent write-back.</span></li>
+        <li><span class="path">tribunal/workflow.py</span><span class="desc">gather_evidence, build_verdict, prompt blocks.</span></li>
+        <li><span class="path">tribunal/foundry.py</span><span class="desc">Responses API streaming with agent_reference.</span></li>
+        <li><span class="path">tribunal/search_tools.py</span><span class="desc">Index schemas and every AI Search query.</span></li>
+        <li><span class="path">tribunal/telemetry.py</span><span class="desc">Spans, verdict record, alert source.</span></li>
+        <li><span class="path">tribunal/mcp_http.py</span><span class="desc">What the container actually serves.</span></li>
+        <li><span class="path">tribunal/docs/deploy.md</span><span class="desc">ACA / APIM URLs and redeploy steps.</span></li>
+        <li><span class="path">tribunal/docs/beyond.md</span><span class="desc">Precedent, photo, appeal contract.</span></li>
+      </ul>
+    </div>
+    <div class="gotchas">
+      <h3>Gotchas</h3>
+      <ul>
+        <li><code>uvicorn --reload</code> watches <code>tribunal/*.py</code>: do not save Python during a live demo.</li>
+        <li>Foundry agent versions are created once per process; a restart creates new versions (the portal accumulates them).</li>
+        <li>AI Search commits asynchronously: <code>record_precedent</code> polls <code>get_document</code> before returning, otherwise the next tribunal misses the ruling.</li>
+        <li>Mistral OCR deployment has capacity 5: concurrent runs hit 429 and back off 30 s.</li>
+        <li>ACA and APIM have no auth; the public endpoints spend gpt-4.1-mini quota while up.</li>
+        <li>Lab policy forces <code>disableLocalAuth</code> on new Cognitive Services accounts: Document Intelligence works only with Entra.</li>
+        <li>APIM Consumption is not offered in swedencentral; BasicV2 was provisioned instead.</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+<script>
+  var snippets = document.querySelectorAll('details.snippet');
+  snippets.forEach(function (d) { d.addEventListener('toggle', function () { if (!d.open) return; snippets.forEach(function (o) { if (o !== d) o.open = false; }); }); });
+</script>
+</body>
+</html>
