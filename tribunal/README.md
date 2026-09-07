@@ -72,11 +72,24 @@ trace with six `agent *` spans, parallel fan-out visible in the waterfall.
 ## Validation
 
 ```bash
-API_PORT=8423 tribunal/validate.sh crash2     # expect-cli headless walkthrough, artifacts in logs/expect-crash2/
+PW=$(npm root -g)/expect-cli/node_modules/playwright-core node tribunal/validate.cjs crash2   # headless walkthrough
+.venv/bin/python -m tribunal.eval        # coverage decisions vs ground truth -> tribunal/data/scorecard.md
+.venv/bin/python -m tribunal.quality     # groundedness / relevance / coherence / fluency / content safety -> quality.md
 ```
 
-Each run records `run.log`, `verdict.json` (DOM assertions), screenshots (streaming, verdict,
-recorded decision) and the Playwright session video.
+Each browser run records `logs/expect-<claim>/run.log`, `verdict.json` (DOM assertions),
+screenshots (streaming, verdict, recorded decision) and `session.webm`. `validate.sh` drives
+the same flow through the expect-cli daemon; it wedges on pages holding an SSE stream open,
+so the Node script that uses expect-cli's bundled playwright-core is the reliable path.
+
+## MCP
+
+```bash
+TRIBUNAL_API=http://localhost:8423 .venv/bin/python -m tribunal.mcp_server   # stdio, tools: list_sample_claims, adjudicate_claim, record_decision
+```
+
+Claude Desktop / VS Code config is in the module docstring. Local only; APIM exposure is the
+Challenge 4 follow-up.
 
 ## Limitations
 
