@@ -42,6 +42,8 @@ tribunal/deploy_infra.sh                 # Foundry + AI Search + App Insights, w
 .venv/bin/python -m tribunal.seed        # index 5 policies + 43 prior claims (2 planted fraud signals)
 tribunal/dev.sh                          # API :8000 + UI :5173 in tmux
 .venv/bin/python -m tribunal.eval        # scorecard vs challenge-6/coverage_ground_truth.json
+.venv/bin/python -m tribunal.mcp_check   # spawn the MCP server over stdio, check 3 tools + adjudicate crash1
+tribunal/alerts.sh                       # upsert the fraud-referral alert rule + action group
 ```
 
 ## Demo script (3 claims, ~45 s each)
@@ -59,7 +61,8 @@ trace with six `agent *` spans, parallel fan-out visible in the waterfall.
 
 | file | role |
 |---|---|
-| `workflow.py` | orchestration, fan-out / fan-in, verdict assembly |
+| `af_workflow.py` | default orchestrator: the tribunal as a Microsoft Agent Framework workflow graph. See below |
+| `workflow.py` | reference orchestrator (`asyncio.gather`); still the source of `build_verdict`, `claim_summary`, `LABELS` |
 | `prompts.py` | the four tribunal prompts + structuring prompt |
 | `foundry.py` | Foundry agent creation (once per process) + streaming Responses calls |
 | `search_tools.py` | AI Search indexes, embeddings, hybrid + vector queries |
@@ -69,12 +72,37 @@ trace with six `agent *` spans, parallel fan-out visible in the waterfall.
 | `eval.py` | scorecard against Challenge 6 ground truth |
 | `ui/` | React + Vite: live agent timeline, verdict card, human gate |
 
+## Microsoft Agent Framework
+
+`af_workflow.py` is the tribunal as an `agent_framework` (1.17.0) workflow graph: five
+`Executor` classes, a typed dataclass message on every edge, one `add_fan_out_edges` group
+and one `add_fan_in_edges` group, built with `WorkflowBuilder` and driven with
+`workflow.run(..., stream=True)`. It is what `api.py` calls; `workflow.py` (`asyncio.gather`)
+stays in the tree as the reference implementation both orchestrators build their verdict from.
+
+```
+ClaimIntake ─▶ OcrExecutor ─▶ StructureExecutor ─▶ Evidence ──fan-out──▶ Adjuster / Fraud / Policy
+                                                                              │  Opinion (fan-in)
+                                                                              ▼
+                                                                       ArbiterExecutor ─▶ VerdictMsg
+```
+
+`WorkflowBuilder.build()` type-checks each edge's declared output against the next handler's
+input, so a mis-wired edge fails at build time, not mid-claim; the fan-in is a real barrier
+(the arbiter runs once, with all three opinions, no join code in tribunal logic); and
+`WorkflowViz(...).to_mermaid()` gives an inspectable graph (`logs/af-graph.mmd`). Executor
+output reaches the browser the same way `workflow.py`'s did: `ctx.yield_output(TribunalEvent)`
+per token, drained live by the runner, replayed onto the same SSE contract, so the React UI,
+`validate.cjs` and `mcp_server.py` needed no change. Details, message table and executor list:
+`tribunal/docs/agent-framework.md`.
+
 ## Validation
 
 ```bash
 PW=$(npm root -g)/expect-cli/node_modules/playwright-core node tribunal/validate.cjs crash2   # headless walkthrough
 .venv/bin/python -m tribunal.eval        # coverage decisions vs ground truth -> tribunal/data/scorecard.md
 .venv/bin/python -m tribunal.quality     # groundedness / relevance / coherence / fluency / content safety -> quality.md
+tribunal/alerts.sh                       # fraud-referral alert (fraud_score > 0.6, 15 min window) -> email
 ```
 
 Each browser run records `logs/expect-<claim>/run.log`, `verdict.json` (DOM assertions),
@@ -82,14 +110,44 @@ screenshots (streaming, verdict, recorded decision) and `session.webm`. `validat
 the same flow through the expect-cli daemon; it wedges on pages holding an SSE stream open,
 so the Node script that uses expect-cli's bundled playwright-core is the reliable path.
 
+The alert fired once, end to end: a crash4 run logged `refer fraud=0.80` to `AppTraces`, and
+`tribunal-fraud-referrals` moved to Fired (Sev2) one 5-minute evaluation cycle later
+(`logs/alert-fired.json`). Email delivery to the action group is not proven from here: Azure
+requires the recipient to confirm a one-time verification mail first. Detail: `tribunal/docs/alerting.md`.
+
 ## MCP
 
+`mcp_server.py` is an MCP stdio server wrapping the running API: `list_sample_claims`,
+`adjudicate_claim(sample)`, `record_decision(claim_id, decision, reason)`. The API must be
+running first (`tribunal/dev.sh`).
+
 ```bash
-TRIBUNAL_API=http://localhost:8423 .venv/bin/python -m tribunal.mcp_server   # stdio, tools: list_sample_claims, adjudicate_claim, record_decision
+TRIBUNAL_API=http://localhost:8423 .venv/bin/python -m tribunal.mcp_server   # stdio
+.venv/bin/python -m tribunal.mcp_check                                       # spawn it, check 3 tools, adjudicate crash1, assert deny
 ```
 
-Claude Desktop / VS Code config is in the module docstring. Local only; APIM exposure is the
-Challenge 4 follow-up.
+**VS Code**: `.vscode/mcp.json` is committed. Open the repo and Copilot Chat agent mode offers to
+start `claims-tribunal`.
+
+**Claude Desktop** (macOS): add to `~/Library/Application Support/Claude/claude_desktop_config.json`
+and restart the app:
+
+```json
+{
+  "mcpServers": {
+    "claims-tribunal": {
+      "command": "/Users/stevengonsalvez/.agents-in-a-box/worktrees/by-name/claims-processing-hack--ms-hack--b61fe60e/.venv/bin/python",
+      "args": ["-m", "tribunal.mcp_server"],
+      "cwd": "/Users/stevengonsalvez/.agents-in-a-box/worktrees/by-name/claims-processing-hack--ms-hack--b61fe60e",
+      "env": { "TRIBUNAL_API": "http://localhost:8423" }
+    }
+  }
+}
+```
+
+Local only (stdio, no auth); remote/APIM exposure is a Challenge 4 follow-up.
+`adjudicate_claim` takes ~40-45 s (six model calls): raise a short client tool timeout.
+Only the 5 bundled samples are adjudicable; no upload tool. Detail: `tribunal/docs/mcp.md`.
 
 ## Limitations
 
@@ -97,3 +155,14 @@ Challenge 4 follow-up.
 - Decisions persist to a JSON file, not Cosmos.
 - Prior-claims corpus is synthetic; two fraud signals are planted on purpose (CLM-0412, CLM-0431/0432).
 - Similarity scores are Azure AI Search HNSW cosine scores (1.0 = identical); 0.75+ is treated as strong.
+- gpt-4.1-mini is not fully deterministic: the Policy Analyst has occasionally cited the wrong
+  policy on crash1 (approve instead of deny) and once on crash2 during a concurrent code change.
+  The current scorecard run is 5/5; rerun `tribunal.eval` before a demo rather than trust one run.
+- `tribunal/smoke.py` still drives the reference `workflow.py` orchestrator, not `af_workflow.py`;
+  `-m tribunal.smoke` does not exercise the Agent Framework graph.
+- Mistral OCR rate-limits (`429`) under repeated calls in a short window; don't run `eval`,
+  `redteam` or a second `smoke` while a claim is on screen.
+- MCP was not launched inside a real VS Code Copilot Chat window or the real Claude Desktop app,
+  only proven via stdio + `mcp_check.py`.
+- Only the fraud-referral alert firing was observed; the negative case (`fraud_score <= 0.6`
+  staying quiet) was not separately tested.
