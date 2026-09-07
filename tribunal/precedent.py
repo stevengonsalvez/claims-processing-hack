@@ -4,6 +4,7 @@ precedent that later tribunals retrieve and cite.
 Index `precedents` (Azure AI Search, client-side text-embedding-3-large vectors).
 """
 import os
+import time
 from datetime import datetime
 
 from azure.core.exceptions import HttpResponseError
@@ -64,7 +65,14 @@ def record_precedent(verdict: dict, human_decision: str, reason: str) -> dict:
         "recorded_at": datetime.now().isoformat(),
     }
     doc["content_vector"] = embed(doc["title"] + "\n" + content)
-    SearchClient(SEARCH_ENDPOINT, PRECEDENT_INDEX, _cred).upload_documents([doc])
+    client = SearchClient(SEARCH_ENDPOINT, PRECEDENT_INDEX, _cred)
+    client.upload_documents([doc])
+    for _ in range(20):  # AI Search commits asynchronously; the next tribunal must see this ruling
+        try:
+            client.get_document(key=doc["id"])
+            break
+        except HttpResponseError:
+            time.sleep(0.25)
     doc.pop("content_vector")
     return doc
 
