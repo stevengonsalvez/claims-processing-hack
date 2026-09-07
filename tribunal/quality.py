@@ -24,13 +24,13 @@ from dotenv import load_dotenv
 from .workflow import claim_summary
 
 load_dotenv(override=True)
-DATA = os.path.join(os.path.dirname(__file__), "data")
+DATA = os.environ.get("TRIBUNAL_DATA_DIR", os.path.join(os.path.dirname(__file__), "data"))
 OUT = os.path.join(DATA, "quality.md")
 
 model = AzureOpenAIModelConfiguration(
     azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
     api_key=os.environ["AZURE_OPENAI_KEY"],
-    azure_deployment=os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini"),
+    azure_deployment=os.environ.get("TRIBUNAL_JUDGE_MODEL", "gpt-4.1-mini"),  # judge stays fixed across model comparisons
     api_version="2024-10-21",
 )
 QUALITY = {
@@ -76,7 +76,7 @@ def main():
         print(row)
 
     keys = ["groundedness", "relevance", "coherence", "fluency"] + (["safety"] if safety else [])
-    lines = ["# Verdict quality (azure-ai-evaluation, judge gpt-4.1-mini, 1-5)", "",
+    lines = [f"# Verdict quality (azure-ai-evaluation, judge {os.environ.get('TRIBUNAL_JUDGE_MODEL', 'gpt-4.1-mini')}, agents on {os.environ.get('MODEL_DEPLOYMENT_NAME', 'gpt-4.1-mini')}, 1-5)", "",
              "| claim | decision | " + " | ".join(keys) + " |", "|---|---|" + "---|" * len(keys)]
     for r in rows:
         lines.append(f"| {r['claim']} | {r['decision']} | " + " | ".join(str(r.get(k)) for k in keys) + " |")

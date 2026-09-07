@@ -13,7 +13,10 @@ from .api import sample_files
 from .workflow import REPO, adjudicate
 
 GT = json.load(open(os.path.join(REPO, "challenge-6", "coverage_ground_truth.json")))
-OUT = os.path.join(os.path.dirname(__file__), "data", "scorecard.md")
+DATA_DIR = os.environ.get("TRIBUNAL_DATA_DIR", os.path.join(os.path.dirname(__file__), "data"))
+os.makedirs(DATA_DIR, exist_ok=True)
+OUT = os.path.join(DATA_DIR, "scorecard.md")
+MODEL = os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini")
 TRIBUNAL_TO_GT = {"approve": "APPROVED", "deny": "DENIED", "refer": "REFER"}
 
 
@@ -44,7 +47,7 @@ async def main(names):
         json.dump(v, open(os.path.join(os.path.dirname(OUT), f"verdict_{name}.json"), "w"), indent=1)
 
     ok = sum(r["policy_ok"] for r in rows)
-    lines = [f"# Tribunal scorecard ({ok}/{len(rows)} policy decisions match ground truth)", "",
+    lines = [f"# Tribunal scorecard ({ok}/{len(rows)} policy decisions match ground truth) · agents on {MODEL}", "",
              "| claim | ground truth | policy agent | match | tribunal verdict | fraud | net payout | s |",
              "|---|---|---|---|---|---|---|---|"]
     for r in rows:

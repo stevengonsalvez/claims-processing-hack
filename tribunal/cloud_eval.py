@@ -47,9 +47,10 @@ from .workflow import claim_summary
 load_dotenv(override=True)
 
 HERE = os.path.dirname(__file__)
-DATA = os.path.join(HERE, "data")
+DATA = os.environ.get("TRIBUNAL_DATA_DIR", os.path.join(HERE, "data"))
+TAG = os.environ.get("TRIBUNAL_RUN_TAG", "")
 ROOT = os.path.dirname(HERE)
-LOGS = os.path.join(ROOT, "logs", "cloud_eval")
+LOGS = os.path.join(ROOT, "logs", "cloud_eval", TAG) if TAG else os.path.join(ROOT, "logs", "cloud_eval")
 DATASET = os.path.join(LOGS, "verdicts.jsonl")
 RESULT = os.path.join(LOGS, "evaluation_results.json")
 OUT = os.path.join(DATA, "cloud_eval.md")
@@ -82,7 +83,7 @@ def evaluators() -> dict:
     model = AzureOpenAIModelConfiguration(
         azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
         api_key=os.environ["AZURE_OPENAI_KEY"],
-        azure_deployment=os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini"),
+        azure_deployment=os.environ.get("TRIBUNAL_JUDGE_MODEL", "gpt-4.1-mini"),
         api_version="2024-10-21",
     )
     evs = {
@@ -112,7 +113,7 @@ def register_continuous(project_endpoint: str = PROJECT) -> dict:
     evaluation rule then fires it on each `responseCompleted` event of the named
     agent, so scores land under Evaluation > Continuous evaluation in the portal.
     """
-    model = os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini")
+    model = os.environ.get("TRIBUNAL_JUDGE_MODEL", "gpt-4.1-mini")
     project = AIProjectClient(endpoint=project_endpoint, credential=DefaultAzureCredential())
     openai_client = project.get_openai_client()
     criteria = [TestingCriterionAzureAIEvaluator(
@@ -148,7 +149,7 @@ def write_report(result: dict, name: str, rows: int, upload_error: str | None,
     studio_url = result.get("studio_url")
     lines = [
         "# Cloud evaluation (azure-ai-evaluation `evaluate`, logged to the Foundry project)", "",
-        f"Run `{name}` - {rows} verdicts, judge `{os.environ.get('MODEL_DEPLOYMENT_NAME', 'gpt-4.1-mini')}`, "
+        f"Run `{name}` - {rows} verdicts, judge `{os.environ.get('TRIBUNAL_JUDGE_MODEL', 'gpt-4.1-mini')}`, agents on `{os.environ.get('MODEL_DEPLOYMENT_NAME', 'gpt-4.1-mini')}`, "
         f"generated {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}.", "",
     ]
     if studio_url:
@@ -209,9 +210,9 @@ def main() -> int:
         return 1
     print(f"dataset: {DATASET} ({rows} rows)")
 
-    name = f"tribunal-verdicts-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
+    name = f"tribunal-verdicts-{TAG + '-' if TAG else ''}{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
     kwargs = dict(data=DATASET, evaluators=evaluators(), evaluation_name=name,
-                  output_path=RESULT, tags={"component": "claims-tribunal", "stage": "pre-production"})
+                  output_path=RESULT, tags={"component": "claims-tribunal", "stage": "pre-production", "agent_model": os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini")})
     upload_error = None
     if args.local or not PROJECT:
         result = evaluate(**kwargs)
