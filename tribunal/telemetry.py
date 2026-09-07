@@ -42,3 +42,35 @@ def agent_span(agent: str, claim_id: str, model: str):
             "claim.id": claim_id,
         },
     )
+
+
+# Challenge 3 proactive alerting: the alert rule queries AppTraces for this event name.
+verdict_log = logging.getLogger("claims-tribunal")
+verdict_log.setLevel(logging.INFO)
+
+
+def record_verdict(verdict: dict) -> dict:
+    """Stamp the verdict on the current span and emit a `tribunal.verdict` log record.
+
+    The span attributes make the decision visible in transaction search / the Foundry
+    tracing tab; the log record is what `tribunal/alerts.sh` alerts on (it lands in
+    AppTraces with the fields in customDimensions, via configure_azure_monitor's
+    logger_name="claims-tribunal" handler).
+    """
+    fields = {
+        "tribunal.decision": str(verdict.get("decision", "refer")),
+        "tribunal.fraud_score": float((verdict.get("fraud") or {}).get("score") or 0),
+        "tribunal.net_payout": float((verdict.get("payout") or {}).get("net") or 0),
+        "claim.id": str(verdict.get("claim_id", "")),
+    }
+    s = trace.get_current_span()
+    if s is not None:
+        for k, v in fields.items():
+            s.set_attribute(k, v)
+    verdict_log.warning(
+        "tribunal.verdict %s %s fraud=%.2f net=%.0f",
+        fields["claim.id"], fields["tribunal.decision"],
+        fields["tribunal.fraud_score"], fields["tribunal.net_payout"],
+        extra={"event_name": "tribunal.verdict", **fields},
+    )
+    return fields
