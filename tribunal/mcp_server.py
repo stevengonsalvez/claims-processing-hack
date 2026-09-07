@@ -10,10 +10,10 @@ import json
 import os
 
 import httpx
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 API = os.environ.get("TRIBUNAL_API", "http://localhost:8000")
-mcp = FastMCP("claims-tribunal")
+mcp = MCPServer("claims-tribunal")
 
 
 def _sse(resp: httpx.Response):
