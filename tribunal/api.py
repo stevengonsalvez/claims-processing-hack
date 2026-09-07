@@ -11,7 +11,7 @@ import tempfile
 import uuid
 from datetime import datetime
 
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -48,6 +48,8 @@ async def adjudicate_route(
 ):
     claim_id = f"CLM-{datetime.now():%Y%m%d}-{uuid.uuid4().hex[:6].upper()}"
     if sample:
+        if sample not in {s["name"] for s in samples()}:
+            raise HTTPException(400, f"unknown sample {sample!r}")
         statement_paths, photo_path = sample_files(sample)
     else:
         tmp = tempfile.mkdtemp(prefix="tribunal-")
