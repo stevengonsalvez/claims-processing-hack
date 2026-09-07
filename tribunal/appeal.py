@@ -9,10 +9,11 @@ import asyncio
 import json
 import time
 
-from . import prompts, search_tools
-from .foundry import MODEL, image_part, run_agent, split_opinion, text_part
+from . import prompts
+from .foundry import MODEL, image_part, parse_json, run_agent, split_opinion, text_part
 from .telemetry import agent_span, span
-from .workflow import LABELS, _data_url, build_verdict, claim_summary
+from .workflow import (LABELS, _data_url, build_verdict, evidence_event, gather_evidence,
+                       photo_block, precedent_block)
 
 APPEALS_ARBITER = """You are the APPEALS ARBITER of an insurance claims tribunal. A first tribunal already ruled (VERDICT v1).
 The claimant has appealed with a statement and possibly new evidence. Three specialists re-examined the claim WITH the appeal.
@@ -27,12 +28,22 @@ Then write a letter to the claimant (120-180 words) that answers their appeal di
   "decision": "approve | deny | refer",
   "confidence": 0.0,
   "rationale": "two or three sentences",
-  "clauses": [{"clause": "v1: same VIN paid 2 months ago", "resolved": true, "response": "bill of sale dated June shows the vehicle changed hands"}],
+  "clauses": [{"clause": "v1: same VIN paid 2 months ago", "resolved": true, "response": "bill of sale dated June shows the vehicle changed hands", "evidence_refs": [{"type": "prior_claim", "ref": "CLM-0412", "label": "duplicate paid 2025-05"}]}],
   "disagreements": [{"between": "adjuster vs fraud", "resolution": "..."}],
   "payout": {"claimed": 0, "covered": 0, "deductible": 0, "limit": null},
   "referral_reason": "string or null",
   "letter": "Dear ..."
 }"""
+
+
+def _split(raw: str) -> tuple[str, dict]:
+    """`split_opinion`, with a fallback for the run where the model emits a bare `===`
+    (or no marker at all) instead of `===JSON===`: recover the JSON object from the prose."""
+    prose, data = split_opinion(raw)
+    if not data and (recovered := parse_json(prose)):
+        data = recovered
+        prose = prose[:prose.find("{")].rstrip().rstrip("= \n")
+    return prose, data
 
 
 async def adjudicate_appeal(claim_id: str, v1: dict, appeal_text: str, new_photo_path: str | None, emit) -> dict:
@@ -55,7 +66,7 @@ async def adjudicate_appeal(claim_id: str, v1: dict, appeal_text: str, new_photo
         try:
             with agent_span(agent, claim_id, MODEL):
                 raw = await run_agent(f"Tribunal{agent.title()}Agent", instructions, parts, on_token=token(agent))
-            prose, data = split_opinion(raw)
+            prose, data = _split(raw)
             await done(agent, t0, prose=prose, data=data)
             return data
         except Exception as e:
@@ -66,13 +77,9 @@ async def adjudicate_appeal(claim_id: str, v1: dict, appeal_text: str, new_photo
     appeal_block = f"APPEAL FROM CLAIMANT:\n{appeal_text}\n" + ("A new photo is attached." if new_photo_path else "No new photo.")
 
     with span("tribunal.appeal", **{"claim.id": claim_id, "appeal.v1_decision": v1.get("decision")}):
-        summary = claim_summary(claim)
-        prior, policy_chunks = await asyncio.gather(
-            asyncio.to_thread(search_tools.search_prior_claims, summary + "\n" + appeal_text),
-            asyncio.to_thread(search_tools.search_policies, claim.get("policy_number") or "", summary),
-        )
-        await emit("evidence", {"prior_claims": prior, "policy_chunks": [
-            {"title": c.get("title"), "score": c.get("score")} for c in policy_chunks], "appeal": appeal_text})
+        ev = await gather_evidence(claim, new_photo_path, claim_id, extra_text=appeal_text)
+        prior, policy_chunks = ev["prior_claims"], ev["policy_chunks"]
+        await emit("evidence", {**evidence_event(ev), "appeal": appeal_text})
 
         photo = [image_part(_data_url(new_photo_path))] if new_photo_path else []
         claim_json = json.dumps(claim, indent=1)
@@ -80,18 +87,23 @@ async def adjudicate_appeal(claim_id: str, v1: dict, appeal_text: str, new_photo
         adjuster, fraud, policy = await asyncio.gather(
             opinion("adjuster", prompts.ADJUSTER, [text_part(f"CLAIM:\n{claim_json}\n\nVERDICT v1:\n{v1_json}\n\n{appeal_block}")] + photo),
             opinion("fraud", prompts.FRAUD, [text_part(
-                f"CLAIM:\n{claim_json}\n\nVERDICT v1:\n{v1_json}\n\n{appeal_block}\n\nPRIOR CLAIMS (vector search, top 5):\n{json.dumps(prior, indent=1)}")] + photo),
+                f"CLAIM:\n{claim_json}\n\nVERDICT v1:\n{v1_json}\n\n{appeal_block}\n\nPRIOR CLAIMS (vector search, top 5):\n{json.dumps(prior, indent=1)}"
+                + photo_block(ev) + precedent_block(ev))] + photo),
             opinion("policy", prompts.POLICY, [text_part(
                 f"CLAIM:\n{claim_json}\n\nVERDICT v1:\n{v1_json}\n\n{appeal_block}\n\nPOLICY DOCUMENT SECTIONS:\n" +
-                "\n\n".join(f"[{c.get('title')}]\n{c.get('content')}" for c in policy_chunks))]),
+                "\n\n".join(f"[{c.get('title')}]\n{c.get('content')}" for c in policy_chunks)
+                + precedent_block(ev))]),
         )
         arbiter = await opinion("arbiter", APPEALS_ARBITER, [text_part(
             f"CLAIM:\n{claim_json}\n\nVERDICT v1:\n{json.dumps(v1_core, indent=1)}\n\n{appeal_block}\n\n"
             f"ADJUSTER (on appeal):\n{json.dumps(adjuster, indent=1)}\n\nFRAUD INVESTIGATOR (on appeal):\n{json.dumps(fraud, indent=1)}\n\n"
-            f"POLICY ANALYST (on appeal):\n{json.dumps(policy, indent=1)}")])
+            f"POLICY ANALYST (on appeal):\n{json.dumps(policy, indent=1)}"
+            + precedent_block(ev) + photo_block(ev))])
 
         v2 = build_verdict(claim_id, claim, adjuster, fraud, policy, arbiter)
-        v2["appeal"] = {"outcome": arbiter.get("outcome", "uphold"), "clauses": arbiter.get("clauses", []),
+        # The model self-reports outcome; the truth is whether the standing decision changed.
+        outcome = "overturn" if v2.get("decision") != v1.get("decision") else "uphold"
+        v2["appeal"] = {"outcome": outcome, "clauses": arbiter.get("clauses", []),
                         "text": appeal_text, "new_photo": bool(new_photo_path)}
         diff = [{"field": k, "v1": v1.get(k), "v2": v2.get(k)} for k in ("decision", "confidence", "referral_reason")
                 if v1.get(k) != v2.get(k)]
